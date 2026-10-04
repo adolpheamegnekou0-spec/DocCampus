@@ -1,0 +1,21 @@
+<svg width="680" height="190" viewBox="0 0 680 190" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="mark" x1="18" y1="14" x2="154" y2="156" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2C9A6B"/>
+      <stop offset="1" stop-color="#126344"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="8" y="12" width="164" height="164" rx="38" fill="url(#mark)"/>
+
+  <path d="M38 92C56 78 74 72 88 77V137C71 130 54 136 38 150V92Z" fill="#FFFFFF"/>
+  <path d="M142 92C124 78 106 72 92 77V137C109 130 126 136 142 150V92Z" fill="#E9F5EE"/>
+  <path d="M90 75V139" stroke="#126344" stroke-width="5" stroke-linecap="round"/>
+  <path d="M48 91C61 85 73 84 83 87M132 91C119 85 107 84 97 87" stroke="#B8E7C9" stroke-width="3" stroke-linecap="round"/>
+  <path d="M65 56H115" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round"/>
+  <path d="M72 56V43C72 36 77 31 84 31H96C103 31 108 36 108 43V56" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="90" cy="50" r="5" fill="#FFFFFF"/>
+
+  <text x="198" y="122" fill="#293832" font-family="Segoe UI, Arial, sans-serif" font-size="76" font-weight="750" letter-spacing="-3.5">Doc</text>
+  <text x="328" y="122" fill="#126344" font-family="Segoe UI, Arial, sans-serif" font-size="76" font-weight="750" letter-spacing="-3.5">Campus</text>
+</svg>
