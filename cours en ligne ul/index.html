@@ -1,0 +1,1860 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="DocCampus — Bibliothèque numérique universitaire"
+    >
+
+    <link rel="icon" type="image/svg+xml" href="assets/logo-mark.svg">
+
+    <title>DocCampus — Bibliothèque universitaire</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Public+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <!-- Font Awesome -->
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    >
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+
+<header class="header">
+
+    <div class="container header-inner">
+
+        <a href="#" class="logo" aria-label="DocCampus">
+
+            <img
+                class="logo-mark"
+                src="assets/logo-doccampus.svg"
+                alt="Logo DocCampus"
+                width="760"
+                height="360"
+            >
+
+        </a>
+
+
+        <nav class="nav" id="mainNav">
+
+            <a href="#accueil">
+                Accueil
+            </a>
+
+            <a href="#facultes">
+                Facultés
+            </a>
+
+            <a href="#documents">
+                Documents
+            </a>
+
+            <a href="#apropos">
+                À propos
+            </a>
+
+            <button class="account-btn" id="accountBtn" type="button">
+                Se connecter
+            </button>
+
+            <a href="admin.html" class="admin-link">
+                <i class="fa-solid fa-lock"></i>
+                Admin
+            </a>
+
+        </nav>
+
+
+        <button
+            class="menu-btn"
+            id="menuBtn"
+            aria-label="Ouvrir le menu"
+        >
+            <i class="fa-solid fa-bars"></i>
+        </button>
+
+    </div>
+
+</header>
+
+
+
+<!-- ============================================================
+     HERO
+     ============================================================ -->
+
+<main id="accueil">
+
+<section class="hero">
+
+    <div class="hero-decoration">
+        <div class="decoration-one"></div>
+        <div class="decoration-two"></div>
+    </div>
+
+
+    <div class="container">
+
+        <div class="hero-content">
+
+            <div class="hero-badge">
+
+                <span class="badge-dot"></span>
+
+                <i class="fa-solid fa-graduation-cap"></i>
+
+                Bibliothèque universitaire
+
+            </div>
+
+
+            <h1>
+                Tous tes documents
+                <span>au même endroit.</span>
+            </h1>
+
+
+            <p class="hero-text">
+
+                Cours, TD, annales et corrigés.
+                Trouve rapidement les documents
+                de ta faculté et de ta filière.
+
+            </p>
+
+
+            <!-- RECHERCHE -->
+
+            <div class="search-box">
+
+                <span class="search-icon">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </span>
+
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="Rechercher un cours, une matière..."
+                    autocomplete="off"
+                >
+
+                <button id="searchBtn">
+                    Rechercher
+                </button>
+
+            </div>
+
+
+            <!-- FILTRES -->
+
+            <div class="filters">
+
+                <button
+                    class="filter active"
+                    data-filter="all"
+                >
+                    Tous
+                </button>
+
+                <button
+                    class="filter"
+                    data-filter="cours"
+                >
+                    Cours
+                </button>
+
+                <button
+                    class="filter"
+                    data-filter="td"
+                >
+                    TD
+                </button>
+
+                <button
+                    class="filter"
+                    data-filter="annale"
+                >
+                    Annales
+                </button>
+
+                <button
+                    class="filter"
+                    data-filter="corrige"
+                >
+                    Corrigés
+                </button>
+
+            </div>
+
+
+            <!-- STATISTIQUES -->
+
+            <div class="hero-stats">
+
+                <div class="hero-stat">
+
+                    <strong>1 200+</strong>
+
+                    <span>Documents</span>
+
+                </div>
+
+
+                <div class="hero-stat-separator"></div>
+
+
+                <div class="hero-stat">
+
+                    <strong>20+</strong>
+
+                    <span>Facultés & écoles</span>
+
+                </div>
+
+
+                <div class="hero-stat-separator"></div>
+
+
+                <div class="hero-stat">
+
+                    <strong>24/7</strong>
+
+                    <span>Accès</span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- ============================================================
+     COMPTEUR
+     ============================================================ -->
+
+<section class="download-section">
+
+    <div class="container">
+
+        <div class="download-card">
+
+            <div class="download-left">
+
+                <div class="download-icon">
+
+                    <i class="fa-solid fa-cloud-arrow-down"></i>
+
+                </div>
+
+            </div>
+
+
+            <div class="download-middle">
+
+                <h3>
+                    Téléchargements gratuits
+                </h3>
+
+                <p>
+                    Tu peux télécharger gratuitement
+                    plusieurs documents aujourd'hui.
+                </p>
+
+
+                <div class="progress-label">
+
+                    <span>
+                        <strong id="downloadCount">0</strong>
+                        / 10 téléchargements
+                    </span>
+
+                    <span id="downloadRemaining">
+                        10 restant(s)
+                    </span>
+
+                </div>
+
+
+                <div class="progress-bar">
+
+                    <div
+                        class="progress-value"
+                        id="progressValue"
+                    ></div>
+
+                </div>
+
+            </div>
+
+
+            <button
+                class="premium-btn"
+                id="premiumBtn"
+            >
+                <i class="fa-solid fa-bolt"></i>
+                Passer en illimité
+            </button>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- ============================================================
+     FACULTÉS
+     ============================================================ -->
+
+<section
+    class="faculties-section"
+    id="facultes"
+>
+
+    <div class="container">
+
+        <div class="section-heading">
+
+            <div>
+
+                <span class="section-label">
+                    Formations universitaires
+                </span>
+
+                <h2>
+                    Choisis ta faculté
+                    ou ton école
+                </h2>
+
+                <p class="section-description">
+
+                    Sélectionne ton établissement
+                    pour accéder aux filières et
+                    aux documents disponibles.
+
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- Recherche faculté -->
+
+        <div class="faculty-search">
+
+            <i class="fa-solid fa-magnifying-glass"></i>
+
+            <input
+                type="text"
+                id="facultySearch"
+                placeholder="Rechercher une faculté, école ou filière..."
+            >
+
+        </div>
+
+
+        <!-- GRILLE -->
+
+        <div
+            class="faculties-grid"
+            id="facultiesGrid"
+        >
+
+
+            <!-- FLLA -->
+
+            <article
+                class="faculty-card"
+                data-search="FLLA Faculté Lettres Langues Arts Lettres Modernes Anglais Allemand Espagnol Linguistique"
+            >
+
+                <div class="faculty-icon green">
+                    <i class="fa-solid fa-book-open"></i>
+                </div>
+
+                <div class="faculty-code">
+                    FLLA
+                </div>
+
+                <h3>
+                    Faculté des Lettres,
+                    Langues et Arts
+                </h3>
+
+                <p>
+                    Lettres modernes, études anglophones,
+                    germaniques, hispaniques et sciences du langage.
+                </p>
+
+                <div class="faculty-tags">
+                    <span>Lettres</span>
+                    <span>Langues</span>
+                    <span>Linguistique</span>
+                </div>
+
+                <button
+                    class="faculty-btn"
+                    data-faculty="flla"
+                >
+                    Voir les documents
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+
+            </article>
+
+
+
+            <!-- FASEG -->
+
+            <article
+                class="faculty-card"
+                data-search="FASEG Sciences Economiques Gestion Economie Finance Comptabilité Marketing"
+            >
+
+                <div class="faculty-icon yellow">
+                    <i class="fa-solid fa-chart-line"></i>
+                </div>
+
+                <div class="faculty-code">
+                    FASEG
+                </div>
+
+                <h3>
+                    Faculté des Sciences
+                    Économiques et de Gestion
+                </h3>
+
+                <p>
+                    Économie, finance, comptabilité,
+                    marketing et gestion.
+                </p>
+
+                <div class="faculty-tags">
+                    <span>Économie</span>
+                    <span>Gestion</span>
+                    <span>Finance</span>
+                </div>
+
+                <button
+                    class="faculty-btn"
+                    data-faculty="faseg"
+                >
+                    Voir les documents
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+
+            </article>
+
+
+
+            <!-- FDS -->
+
+            <article
+                class="faculty-card"
+                data-search="FDS Sciences Mathématiques Physique Chimie Biologie Géosciences"
+            >
+
+                <div class="faculty-icon green">
+                    <i class="fa-solid fa-flask"></i>
+                </div>
+
+                <div class="faculty-code">
+                    FDS
+                </div>
+
+                <h3>
+                    Faculté des Sciences
+                </h3>
+
+                <p>
+                    Mathématiques, physique, chimie,
+                    biologie et géosciences.
+                </p>
+
+                <div class="faculty-tags">
+                    <span>Maths</span>
+                    <span>Physique</span>
+                    <span>Chimie</span>
+                </div>
+
+                <button
+                    class="faculty-btn"
+                    data-faculty="fds"
+                >
+                    Voir les documents
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+
+            </article>
+
+
+
+            <!-- FDD -->
+
+            <article
+                class="faculty-card"
+                data-search="FDD Droit Public Droit Privé Sciences Politiques"
+            >
+
+                <div class="faculty-icon black">
+                    <i class="fa-solid fa-scale-balanced"></i>
+                </div>
+
+                <div class="faculty-code">
+                    FDD
+                </div>
+
+                <h3>
+                    Faculté de Droit
+                </h3>
+
+                <p>
+                    Droit public, droit privé
+                    et sciences politiques.
+                </p>
+
+                <div class="faculty-tags">
+                    <span>Droit public</span>
+                    <span>Droit privé</span>
+                    <span>Fiscalité</span>
+                </div>
+
+                <button
+                    class="faculty-btn"
+                    data-faculty="fdd"
+                >
+                    Voir les documents
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+
+            </article>
+
+
+
+            <!-- FSHS -->
+
+            <article
+                class="faculty-card"
+                data-search="FSHS Homme Société Sociologie Psychologie Philosophie Histoire Géographie Anthropologie"
+            >
+
+                <div class="faculty-icon yellow">
+                    <i class="fa-solid fa-people-group"></i>
+                </div>
+
+                <div class="faculty-code">
+                    FSHS
+                </div>
+
+                <h3>
+                    Faculté des Sciences
+                    de l'Homme et de la Société
+                </h3>
+
+                <p>
+                    Sociologie, psychologie, philosophie,
+                    histoire, géographie et anthropologie.
+                </p>
+
+                <div class="faculty-tags">
+                    <span>Sociologie</span>
+                    <span>Psychologie</span>
+                    <span>Histoire</span>
+                </div>
+
+                <button
+                    class="faculty-btn"
+                    data-faculty="fshs"
+                >
+                    Voir les documents
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+
+            </article>
+
+
+
+            <!-- FSS -->
+
+            <article
+                class="faculty-card"
+                data-search="FSS Santé Médecine Pharmacie Odonto Stomatologie"
+            >
+
+                <div class="faculty-icon green">
+                    <i class="fa-solid fa-heart-pulse"></i>
+                </div>
+
+                <div class="faculty-code">
+                    FSS
+                </div>
+
+                <h3>
+                    Faculté des Sciences
+                    de la Santé
+                </h3>
+
+                <p>
+                    Médecine, pharmacie,
+                    odontostomatologie et spécialités médicales.
+                </p>
+
+                <div class="faculty-tags">
+                    <span>Médecine</span>
+                    <span>Pharmacie</span>
+                    <span>Santé</span>
+                </div>
+
+                <button
+                    class="faculty-btn"
+                    data-faculty="fss"
+                >
+                    Voir les documents
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+
+            </article>
+
+
+
+            <!-- EPL -->
+
+            <article
+                class="faculty-card"
+                data-search="EPL Polytechnique Génie Civil Electrique Mécanique Informatique IA Big Data"
+            >
+
+                <div class="faculty-icon black">
+                    <i class="fa-solid fa-gears"></i>
+                </div>
+
+                <div class="faculty-code">
+                    EPL
+                </div>
+
+                <h3>
+                    École Polytechnique
+                    de Lomé
+                </h3>
+
+                <p>
+                    Génie civil, électrique,
+                    mécanique, informatique,
+                    IA et Big Data.
+                </p>
+
+                <div class="faculty-tags">
+                    <span>Ingénierie</span>
+                    <span>Informatique</span>
+                    <span>IA</span>
+                </div>
+
+                <button
+                    class="faculty-btn"
+                    data-faculty="epl"
+                >
+                    Voir les documents
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+
+            </article>
+
+
+
+            <!-- ESA -->
+
+            <article
+                class="faculty-card"
+                data-search="ESA Agronomie Phytotechnie Zootechnie Agroéconomie Agroalimentaire"
+            >
+
+                <div class="faculty-icon green">
+                    <i class="fa-solid fa-seedling"></i>
+                </div>
+
+                <div class="faculty-code">
+                    ESA
+                </div>
+
+                <h3>
+                    École Supérieure
+                    d'Agronomie
+                </h3>
+
+                <p>
+                    Production végétale, animale,
+                    agroéconomie et agroalimentaire.
+                </p>
+
+                <div class="faculty-tags">
+                    <span>Agronomie</span>
+                    <span>Agroéconomie</span>
+                    <span>Élevage</span>
+                </div>
+
+                <button
+                    class="faculty-btn"
+                    data-faculty="esa"
+                >
+                    Voir les documents
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+
+            </article>
+
+
+
+            <!-- ESTBA -->
+
+            <article
+                class="faculty-card"
+                data-search="ESTBA Techniques Biologiques Alimentaires Biomédicales Environnement Qualité"
+            >
+
+                <div class="faculty-icon yellow">
+                    <i class="fa-solid fa-microscope"></i>
+                </div>
+
+                <div class="faculty-code">
+                    ESTBA
+                </div>
+
+                <h3>
+                    École Supérieure des
+                    Techniques Biologiques et Alimentaires
+                </h3>
+
+                <p>
+                    Analyses biomédicales,
+                    environnement et sécurité alimentaire.
+                </p>
+
+                <div class="faculty-tags">
+                    <span>Biologie</span>
+                    <span>Environnement</span>
+                    <span>Alimentation</span>
+                </div>
+
+                <button
+                    class="faculty-btn"
+                    data-faculty="estba"
+                >
+                    Voir les documents
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+
+            </article>
+
+
+
+            <!-- IUT -->
+
+            <article
+                class="faculty-card"
+                data-search="IUT Gestion Finance Comptabilité Commercial Marketing GEA"
+            >
+
+                <div class="faculty-icon green">
+                    <i class="fa-solid fa-briefcase"></i>
+                </div>
+
+                <div class="faculty-code">
+                    IUT
+                </div>
+
+                <h3>
+                    Institut Universitaire
+                    de Technologie de Gestion
+                </h3>
+
+                <p>
+                    Finance, comptabilité,
+                    gestion commerciale et marketing.
+                </p>
+
+                <div class="faculty-tags">
+                    <span>Finance</span>
+                    <span>Comptabilité</span>
+                    <span>Marketing</span>
+                </div>
+
+                <button
+                    class="faculty-btn"
+                    data-faculty="iut"
+                >
+                    Voir les documents
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+
+            </article>
+
+
+
+            <!-- ISICA -->
+
+            <article
+                class="faculty-card"
+                data-search="ISICA Information Communication Arts Journalisme Publicité Graphisme"
+            >
+
+                <div class="faculty-icon black">
+                    <i class="fa-solid fa-camera"></i>
+                </div>
+
+                <div class="faculty-code">
+                    ISICA
+                </div>
+
+                <h3>
+                    Institut des Sciences de
+                    l'Information, de la Communication et des Arts
+                </h3>
+
+                <p>
+                    Journalisme, communication,
+                    publicité et arts graphiques.
+                </p>
+
+                <div class="faculty-tags">
+                    <span>Journalisme</span>
+                    <span>Communication</span>
+                    <span>Arts</span>
+                </div>
+
+                <button
+                    class="faculty-btn"
+                    data-faculty="isica"
+                >
+                    Voir les documents
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+
+            </article>
+
+
+
+            <!-- INSE -->
+
+            <article
+                class="faculty-card"
+                data-search="INSE Sciences Education Enseignants Conseillers Inspecteurs"
+            >
+
+                <div class="faculty-icon yellow">
+                    <i class="fa-solid fa-chalkboard-user"></i>
+                </div>
+
+                <div class="faculty-code">
+                    INSE
+                </div>
+
+                <h3>
+                    Institut National
+                    des Sciences de l'Éducation
+                </h3>
+
+                <p>
+                    Sciences de l'éducation,
+                    formation des enseignants et encadrement.
+                </p>
+
+                <div class="faculty-tags">
+                    <span>Éducation</span>
+                    <span>Enseignement</span>
+                    <span>Formation</span>
+                </div>
+
+                <button
+                    class="faculty-btn"
+                    data-faculty="inse"
+                >
+                    Voir les documents
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+
+            </article>
+
+
+
+            <!-- EAM -->
+
+            <article
+                class="faculty-card"
+                data-search="EAM Assistants Médicaux Santé Anesthésie Radiologie Imagerie"
+            >
+
+                <div class="faculty-icon green">
+                    <i class="fa-solid fa-user-doctor"></i>
+                </div>
+
+                <div class="faculty-code">
+                    EAM
+                </div>
+
+                <h3>
+                    École des Assistants
+                    Médicaux
+                </h3>
+
+                <p>
+                    Formation professionnelle
+                    dans le domaine de la santé.
+                </p>
+
+                <div class="faculty-tags">
+                    <span>Santé</span>
+                    <span>Radiologie</span>
+                    <span>Anesthésie</span>
+                </div>
+
+                <button
+                    class="faculty-btn"
+                    data-faculty="eam"
+                >
+                    Voir les documents
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+
+            </article>
+
+
+
+            <!-- INJS -->
+
+            <article
+                class="faculty-card"
+                data-search="INJS Jeunesse Sports STAPS Management Sport Animation"
+            >
+
+                <div class="faculty-icon green">
+                    <i class="fa-solid fa-person-running"></i>
+                </div>
+
+                <div class="faculty-code">
+                    INJS
+                </div>
+
+                <h3>
+                    Institut National
+                    de la Jeunesse et des Sports
+                </h3>
+
+                <p>
+                    STAPS, management du sport
+                    et animation socio-éducative.
+                </p>
+
+                <div class="faculty-tags">
+                    <span>STAPS</span>
+                    <span>Sport</span>
+                    <span>Animation</span>
+                </div>
+
+                <button
+                    class="faculty-btn"
+                    data-faculty="injs"
+                >
+                    Voir les documents
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+
+            </article>
+
+
+
+            <!-- CONFUCIUS -->
+
+            <article
+                class="faculty-card"
+                data-search="Institut Confucius Chinois Interprétariat Commerce International"
+            >
+
+                <div class="faculty-icon yellow">
+                    <i class="fa-solid fa-language"></i>
+                </div>
+
+                <div class="faculty-code">
+                    CONFUCIUS
+                </div>
+
+                <h3>
+                    Institut Confucius
+                </h3>
+
+                <p>
+                    Chinois, interprétariat
+                    et commerce international.
+                </p>
+
+                <div class="faculty-tags">
+                    <span>Chinois</span>
+                    <span>Langue</span>
+                    <span>Commerce</span>
+                </div>
+
+                <button
+                    class="faculty-btn"
+                    data-faculty="confucius"
+                >
+                    Voir les documents
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+
+            </article>
+
+
+
+            <!-- I2M -->
+
+            <article
+                class="faculty-card"
+                data-search="I2M IAE IAEIM Logistique Management Energie Maintenance"
+            >
+
+                <div class="faculty-icon black">
+                    <i class="fa-solid fa-industry"></i>
+                </div>
+
+                <div class="faculty-code">
+                    I2M / IAE / IAEIM
+                </div>
+
+                <h3>
+                    Instituts spécialisés
+                    de Logistique et Management
+                </h3>
+
+                <p>
+                    Logistique hospitalière,
+                    management public et maintenance industrielle.
+                </p>
+
+                <div class="faculty-tags">
+                    <span>Logistique</span>
+                    <span>Management</span>
+                    <span>Maintenance</span>
+                </div>
+
+                <button
+                    class="faculty-btn"
+                    data-faculty="i2m"
+                >
+                    Voir les documents
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+
+            </article>
+
+
+        </div>
+
+
+        <div
+            class="faculty-empty"
+            id="facultyEmpty"
+        >
+            <i class="fa-solid fa-magnifying-glass"></i>
+
+            <h3>
+                Aucun établissement trouvé
+            </h3>
+
+            <p>
+                Essaie avec un autre nom,
+                une autre faculté ou une filière.
+            </p>
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- ============================================================
+     DOCUMENTS
+     ============================================================ -->
+
+<section
+    class="documents-section"
+    id="documents"
+>
+
+    <div class="container">
+
+        <div class="section-heading">
+
+            <div>
+
+                <span class="section-label">
+                    Bibliothèque
+                </span>
+
+                <h2>
+                    Documents récents
+                </h2>
+
+                <p class="section-description">
+                    Les documents disponibles sur DocCampus.
+                </p>
+
+            </div>
+
+            <div class="document-count-box">
+                <span id="documentCount">6</span>
+                documents
+            </div>
+
+        </div>
+
+
+        <div
+            class="documents-list"
+            id="documentsList"
+        >
+
+
+            <!-- DOCUMENT 1 -->
+
+            <article
+                class="document-card"
+                data-type="cours"
+                data-title="Analyse mathématique"
+            >
+
+                <div class="document-color cours-color"></div>
+
+                <div class="file-icon cours-icon">
+                    <i class="fa-solid fa-file-lines"></i>
+                </div>
+
+                <div class="document-info">
+
+                    <div class="document-top">
+
+                        <span class="type-badge cours">
+                            Cours
+                        </span>
+
+                        <span class="document-year">
+                            2025
+                        </span>
+
+                    </div>
+
+                    <h3>
+                        Analyse mathématique
+                    </h3>
+
+                    <div class="subject">
+                        FDS • Mathématiques
+                    </div>
+
+                    <div class="document-meta">
+
+                        <span>
+                            <i class="fa-solid fa-download"></i>
+                            324 téléchargements
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <button
+                    class="download-btn"
+                    data-file="documents/fds/mathematiques/analyse-mathematique.pdf"
+                    aria-label="Télécharger Analyse mathématique"
+                >
+                    <i class="fa-solid fa-download"></i>
+                </button>
+
+            </article>
+
+
+
+            <!-- DOCUMENT 2 -->
+
+            <article
+                class="document-card"
+                data-type="td"
+                data-title="TD Programmation Python"
+            >
+
+                <div class="document-color td-color"></div>
+
+                <div class="file-icon td-icon">
+                    <i class="fa-solid fa-file-code"></i>
+                </div>
+
+                <div class="document-info">
+
+                    <div class="document-top">
+
+                        <span class="type-badge td">
+                            TD
+                        </span>
+
+                        <span class="document-year">
+                            2025
+                        </span>
+
+                    </div>
+
+                    <h3>
+                        TD Programmation Python
+                    </h3>
+
+                    <div class="subject">
+                        EPL • Informatique
+                    </div>
+
+                    <div class="document-meta">
+
+                        <span>
+                            <i class="fa-solid fa-download"></i>
+                            218 téléchargements
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <button
+                    class="download-btn"
+                    data-file="documents/epl/informatique/td-python.pdf"
+                    aria-label="Télécharger TD Python"
+                >
+                    <i class="fa-solid fa-download"></i>
+                </button>
+
+            </article>
+
+
+
+            <!-- DOCUMENT 3 -->
+
+            <article
+                class="document-card"
+                data-type="annale"
+                data-title="Annale Physique 2024"
+            >
+
+                <div class="document-color annale-color"></div>
+
+                <div class="file-icon annale-icon">
+                    <i class="fa-solid fa-file-pdf"></i>
+                </div>
+
+                <div class="document-info">
+
+                    <div class="document-top">
+
+                        <span class="type-badge annale">
+                            Annale
+                        </span>
+
+                        <span class="document-year">
+                            2024
+                        </span>
+
+                    </div>
+
+                    <h3>
+                        Annale Physique 2024
+                    </h3>
+
+                    <div class="subject">
+                        FDS • Physique
+                    </div>
+
+                    <div class="document-meta">
+
+                        <span>
+                            <i class="fa-solid fa-download"></i>
+                            587 téléchargements
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <button
+                    class="download-btn"
+                    data-file="documents/fds/physique/annale-physique-2024.pdf"
+                    aria-label="Télécharger Annale Physique"
+                >
+                    <i class="fa-solid fa-download"></i>
+                </button>
+
+            </article>
+
+
+
+            <!-- DOCUMENT 4 -->
+
+            <article
+                class="document-card"
+                data-type="corrige"
+                data-title="Corrigé Chimie générale"
+            >
+
+                <div class="document-color corrige-color"></div>
+
+                <div class="file-icon corrige-icon">
+                    <i class="fa-solid fa-file-circle-check"></i>
+                </div>
+
+                <div class="document-info">
+
+                    <div class="document-top">
+
+                        <span class="type-badge corrige">
+                            Corrigé
+                        </span>
+
+                        <span class="document-year">
+                            2025
+                        </span>
+
+                    </div>
+
+                    <h3>
+                        Corrigé Chimie générale
+                    </h3>
+
+                    <div class="subject">
+                        FDS • Chimie
+                    </div>
+
+                    <div class="document-meta">
+
+                        <span>
+                            <i class="fa-solid fa-download"></i>
+                            142 téléchargements
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <button
+                    class="download-btn"
+                    data-file="documents/fds/chimie/corrige-chimie.pdf"
+                    aria-label="Télécharger corrigé Chimie"
+                >
+                    <i class="fa-solid fa-download"></i>
+                </button>
+
+            </article>
+
+
+
+            <!-- DOCUMENT 5 -->
+
+            <article
+                class="document-card"
+                data-type="cours"
+                data-title="Introduction à l'économie"
+            >
+
+                <div class="document-color cours-color"></div>
+
+                <div class="file-icon cours-icon">
+                    <i class="fa-solid fa-file-lines"></i>
+                </div>
+
+                <div class="document-info">
+
+                    <div class="document-top">
+
+                        <span class="type-badge cours">
+                            Cours
+                        </span>
+
+                        <span class="document-year">
+                            2025
+                        </span>
+
+                    </div>
+
+                    <h3>
+                        Introduction à l'économie
+                    </h3>
+
+                    <div class="subject">
+                        FASEG • Sciences économiques
+                    </div>
+
+                    <div class="document-meta">
+
+                        <span>
+                            <i class="fa-solid fa-download"></i>
+                            96 téléchargements
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <button
+                    class="download-btn"
+                    data-file="documents/faseg/economie/introduction-economie.pdf"
+                    aria-label="Télécharger Introduction économie"
+                >
+                    <i class="fa-solid fa-download"></i>
+                </button>
+
+            </article>
+
+
+
+            <!-- DOCUMENT 6 -->
+
+            <article
+                class="document-card"
+                data-type="td"
+                data-title="TD Statistiques"
+            >
+
+                <div class="document-color td-color"></div>
+
+                <div class="file-icon td-icon">
+                    <i class="fa-solid fa-chart-column"></i>
+                </div>
+
+                <div class="document-info">
+
+                    <div class="document-top">
+
+                        <span class="type-badge td">
+                            TD
+                        </span>
+
+                        <span class="document-year">
+                            2024
+                        </span>
+
+                    </div>
+
+                    <h3>
+                        TD Statistiques
+                    </h3>
+
+                    <div class="subject">
+                        FASEG • Statistiques
+                    </div>
+
+                    <div class="document-meta">
+
+                        <span>
+                            <i class="fa-solid fa-download"></i>
+                            183 téléchargements
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <button
+                    class="download-btn"
+                    data-file="documents/faseg/statistiques/td-statistiques.pdf"
+                    aria-label="Télécharger TD statistiques"
+                >
+                    <i class="fa-solid fa-download"></i>
+                </button>
+
+            </article>
+
+
+        </div>
+
+
+        <div
+            class="empty-state"
+            id="emptyState"
+        >
+
+            <div class="empty-icon">
+                <i class="fa-solid fa-folder-open"></i>
+            </div>
+
+            <h3>
+                Aucun document trouvé
+            </h3>
+
+            <p>
+                Essaie avec un autre mot-clé ou un autre filtre.
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- ============================================================
+     FEATURES
+     ============================================================ -->
+
+<section
+    class="features-section"
+    id="apropos"
+>
+
+    <div class="container">
+
+        <div class="features-heading">
+
+            <span class="section-label">
+                Pourquoi DocCampus ?
+            </span>
+
+            <h2>
+                Tout ce dont tu as besoin
+                pour tes études.
+            </h2>
+
+        </div>
+
+
+        <div class="features-grid">
+
+
+            <article class="feature-card">
+
+                <div class="feature-icon green">
+                    <i class="fa-solid fa-building-columns"></i>
+                </div>
+
+                <h3>
+                    Toutes les facultés
+                </h3>
+
+                <p>
+                    Retrouve les documents classés
+                    par faculté, école et filière.
+                </p>
+
+            </article>
+
+
+            <article class="feature-card">
+
+                <div class="feature-icon yellow">
+                    <i class="fa-solid fa-bolt"></i>
+                </div>
+
+                <h3>
+                    Recherche rapide
+                </h3>
+
+                <p>
+                    Trouve rapidement un cours,
+                    une annale ou un corrigé.
+                </p>
+
+            </article>
+
+
+            <article class="feature-card">
+
+                <div class="feature-icon blue">
+                    <i class="fa-solid fa-mobile-screen-button"></i>
+                </div>
+
+                <h3>
+                    Accessible partout
+                </h3>
+
+                <p>
+                    Consulte ta bibliothèque depuis
+                    ton ordinateur ou ton téléphone.
+                </p>
+
+            </article>
+
+        </div>
+
+    </div>
+
+</section>
+
+</main>
+
+
+
+<!-- ============================================================
+     FOOTER
+     ============================================================ -->
+
+<footer class="footer">
+
+    <div class="container footer-inner">
+
+        <div class="footer-brand">
+
+            <div class="footer-logo">
+
+                <img src="assets/logo-mark.svg" alt="" width="40" height="40">
+
+                <span>
+                    DocCampus
+                </span>
+
+            </div>
+
+            <p>
+                Ta bibliothèque numérique universitaire.
+                Cours, TD, annales et corrigés réunis
+                au même endroit.
+            </p>
+
+        </div>
+
+
+        <div class="footer-links">
+
+            <a href="#accueil">
+                Accueil
+            </a>
+
+            <a href="#facultes">
+                Facultés
+            </a>
+
+            <a href="#documents">
+                Documents
+            </a>
+
+            <a href="admin.html">
+                Administration
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <div class="container">
+
+        <div class="copyright">
+
+            © 2026 DocCampus —
+            Bibliothèque universitaire.
+
+        </div>
+
+    </div>
+
+</footer>
+
+
+<!-- ============================================================
+     COMPTE UTILISATEUR
+     ============================================================ -->
+
+<div class="modal" id="accountModal">
+    <div class="modal-content">
+        <button class="modal-close" id="accountClose" type="button" aria-label="Fermer">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        <div class="modal-icon">
+            <i class="fa-solid fa-user"></i>
+        </div>
+        <h2 id="accountTitle">Se connecter</h2>
+        <p id="accountDescription">Connecte-toi à ton compte DocCampus.</p>
+        <form id="accountForm" class="account-form">
+            <label>
+                Adresse e-mail
+                <input name="email" type="email" autocomplete="email" required>
+            </label>
+            <label>
+                Mot de passe
+                <input name="password" type="password" autocomplete="current-password" minlength="10" maxlength="128" required>
+            </label>
+            <p class="account-message" id="accountMessage" role="status" aria-live="polite"></p>
+            <button class="modal-action" type="submit">Se connecter</button>
+        </form>
+        <button class="account-mode-toggle" id="accountModeToggle" type="button">
+            Créer un compte
+        </button>
+    </div>
+</div>
+
+
+<!-- ============================================================
+     MODAL FACULTÉ
+     ============================================================ -->
+
+<div
+    class="faculty-modal"
+    id="facultyModal"
+>
+
+    <div class="faculty-modal-content">
+
+        <button
+            class="modal-close"
+            id="facultyModalClose"
+            aria-label="Fermer"
+        >
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+
+
+        <div
+            class="modal-faculty-icon"
+            id="modalFacultyIcon"
+        >
+            <i class="fa-solid fa-building-columns"></i>
+        </div>
+
+
+        <div class="modal-faculty-code"
+             id="modalFacultyCode">
+        </div>
+
+
+        <h2 id="modalFacultyTitle">
+            Faculté
+        </h2>
+
+
+        <p id="modalFacultyDescription">
+        </p>
+
+
+        <div
+            class="programs-list"
+            id="programsList"
+        >
+        </div>
+
+
+        <div
+            class="modal-documents"
+            id="modalDocuments"
+        >
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- ============================================================
+     MODAL PREMIUM
+     ============================================================ -->
+
+<div
+    class="modal"
+    id="premiumModal"
+>
+
+    <div class="modal-content">
+
+        <button
+            class="modal-close"
+            id="premiumClose"
+            aria-label="Fermer"
+        >
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+
+
+        <div class="modal-icon">
+
+            <i class="fa-solid fa-bolt"></i>
+
+        </div>
+
+
+        <h2>
+            DocCampus Illimité
+        </h2>
+
+
+        <p>
+            Accède à tous les documents
+            sans limite de téléchargement.
+        </p>
+
+
+        <div class="premium-benefits">
+
+            <div>
+                <i class="fa-solid fa-circle-check"></i>
+                Téléchargements illimités
+            </div>
+
+            <div>
+                <i class="fa-solid fa-circle-check"></i>
+                Accès à toutes les facultés
+            </div>
+
+            <div>
+                <i class="fa-solid fa-circle-check"></i>
+                Accès aux nouvelles annales
+            </div>
+
+            <div>
+                <i class="fa-solid fa-circle-check"></i>
+                Aucun téléchargement perdu
+            </div>
+
+        </div>
+
+
+        <button class="modal-action">
+            Bientôt disponible
+        </button>
+
+    </div>
+
+</div>
+
+
+
+<!-- JavaScript -->
+
+<script src="script.js"></script>
+
+</body>
+</html>

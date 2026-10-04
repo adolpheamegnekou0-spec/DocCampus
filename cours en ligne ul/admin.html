@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>DocCampus — Administration</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Public+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+
+        body {
+            background: #F5F7FB;
+        }
+
+        .admin-header {
+            background: #34443E;
+            color: white;
+            padding: 18px 0;
+        }
+
+        .admin-header-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .admin-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: "Bricolage Grotesque", sans-serif;
+            font-size: 25px;
+        }
+
+        .admin-title img {
+            display: block;
+            border-radius: 12px;
+        }
+
+        .admin-title-suffix {
+            color: #AFCFC0;
+            font-weight: 500;
+        }
+
+        .back-btn {
+            min-height: 44px;
+            padding: 0 15px;
+            border-radius: 10px;
+            background: #1B7F5A;
+            color: white;
+            font-weight: 700;
+        }
+
+        .dashboard {
+            padding: 45px 0;
+        }
+
+        .dashboard h1 {
+            font-family: "Bricolage Grotesque", sans-serif;
+            font-size: 38px;
+            margin-bottom: 7px;
+        }
+
+        .dashboard-subtitle {
+            color: #64748B;
+            margin-bottom: 30px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns:
+                repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 35px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 18px;
+            padding: 22px;
+            border: 1px solid #E7EBF2;
+            box-shadow: 0 5px 18px rgba(20,33,61,.05);
+        }
+
+        .stat-icon {
+            width: 45px;
+            height: 45px;
+            display: grid;
+            place-items: center;
+            border-radius: 12px;
+            background: #E5F5EE;
+            margin-bottom: 17px;
+            font-size: 21px;
+        }
+
+        .stat-card h3 {
+            font-family: "Bricolage Grotesque", sans-serif;
+            font-size: 29px;
+        }
+
+        .stat-card p {
+            color: #64748B;
+            font-size: 13px;
+        }
+
+        .admin-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        .admin-panel {
+            background: white;
+            border-radius: 18px;
+            padding: 22px;
+            border: 1px solid #E7EBF2;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .panel-header h2 {
+            font-family: "Bricolage Grotesque", sans-serif;
+            font-size: 21px;
+        }
+
+        .add-btn {
+            min-height: 44px;
+            padding: 0 15px;
+            border: 0;
+            border-radius: 10px;
+            background: #1B7F5A;
+            color: white;
+            font-weight: 700;
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .admin-table th,
+        .admin-table td {
+            text-align: left;
+            padding: 13px 8px;
+            border-bottom: 1px solid #E7EBF2;
+            font-size: 13px;
+        }
+
+        .admin-table th {
+            color: #64748B;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 9px;
+            border-radius: 999px;
+            background: #E6F5EF;
+            color: #1B7F5A;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .quick-actions {
+            display: grid;
+            gap: 10px;
+        }
+
+        .quick-action {
+            min-height: 52px;
+            border: 1px solid #E7EBF2;
+            border-radius: 12px;
+            background: white;
+            text-align: left;
+            padding: 0 15px;
+            font-weight: 600;
+            color: #26332E;
+        }
+
+        .quick-action:hover {
+            background: #F5F7FB;
+        }
+
+        @media (max-width: 850px) {
+
+            .stats-grid {
+                grid-template-columns:
+                    repeat(2, 1fr);
+            }
+
+            .admin-grid {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+        @media (max-width: 600px) {
+
+            .dashboard {
+                padding: 30px 0;
+            }
+
+            .dashboard h1 {
+                font-size: 31px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .stat-card {
+                padding: 16px;
+            }
+
+            .stat-card h3 {
+                font-size: 24px;
+            }
+
+            .admin-panel {
+                overflow-x: auto;
+            }
+
+            .admin-table {
+                min-width: 550px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- HEADER ADMIN -->
+
+    <header class="admin-header">
+
+        <div class="container admin-header-inner">
+
+            <div class="admin-title">
+                <img src="assets/logo-mark.svg" alt="" width="42" height="42">
+                <span>DocCampus <span class="admin-title-suffix">Admin</span></span>
+            </div>
+
+            <button class="back-btn admin-logout" id="adminLogout" type="button" hidden>
+                Déconnexion
+            </button>
+
+            <a
+                href="index.html"
+                class="back-btn"
+            >
+                ← Retour au site
+            </a>
+
+        </div>
+
+    </header>
+
+    <main class="dashboard" id="adminLogin">
+        <div class="container">
+            <section class="admin-panel admin-login-panel">
+                <h1>Connexion administrateur</h1>
+                <p class="dashboard-subtitle">Connecte-toi avec le compte administrateur configuré sur le serveur.</p>
+                <form id="adminLoginForm" class="admin-login-form">
+                    <label>
+                        Adresse e-mail
+                        <input name="email" type="email" autocomplete="username" required>
+                    </label>
+                    <label>
+                        Mot de passe
+                        <input name="password" type="password" autocomplete="current-password" minlength="10" required>
+                    </label>
+                    <button class="add-btn" type="submit">Se connecter</button>
+                    <p id="adminLoginMessage" role="status" aria-live="polite"></p>
+                </form>
+            </section>
+        </div>
+    </main>
+
+    <!-- DASHBOARD -->
+
+    <main class="dashboard" id="adminDashboard" hidden>
+
+        <div class="container">
+
+            <h1>
+                Tableau de bord
+            </h1>
+
+            <p class="dashboard-subtitle">
+                Vue générale de votre bibliothèque de documents.
+            </p>
+
+
+            <!-- STATISTIQUES -->
+
+            <section class="stats-grid" id="adminStats">
+
+                <div class="stat-card">
+
+                    <div class="stat-icon">
+                        📄
+                    </div>
+
+                    <h3 id="statDocuments">0</h3>
+
+                    <p>
+                        Documents
+                    </p>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-icon">
+                        ↓
+                    </div>
+
+                    <h3 id="statDownloads">0</h3>
+
+                    <p>
+                        Téléchargements
+                    </p>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-icon">
+                        👥
+                    </div>
+
+                    <h3 id="statUsers">0</h3>
+
+                    <p>
+                        Utilisateurs
+                    </p>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-icon">
+                        ⭐
+                    </div>
+
+                    <h3 id="statSubscriptions">0</h3>
+
+                    <p>
+                        Abonnements
+                    </p>
+
+                </div>
+
+            </section>
+
+
+            <!-- CONTENU ADMIN -->
+
+            <section class="admin-grid">
+
+
+                <!-- DOCUMENTS -->
+
+                <div class="admin-panel">
+
+                    <div class="panel-header">
+
+                        <h2>
+                            Documents récents
+                        </h2>
+
+                        <button class="add-btn" type="button">
+                            + Ajouter
+                        </button>
+
+                    </div>
+
+
+                    <table class="admin-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Document
+                                </th>
+
+                                <th>
+                                    Type
+                                </th>
+
+                                <th>
+                                    Téléchargements
+                                </th>
+
+                                <th>
+                                    Statut
+                                </th>
+                                <th>
+                                    Action
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody id="adminDocumentRows"></tbody>
+
+                    </table>
+
+                </div>
+
+
+                <!-- ACTIONS RAPIDES -->
+
+                <aside class="admin-panel">
+
+                    <div class="panel-header">
+
+                        <h2>
+                            Actions rapides
+                        </h2>
+
+                    </div>
+
+
+                    <div class="quick-actions">
+
+                        <button class="quick-action" type="button" data-admin-action="add-document">
+                            📄 Ajouter un document
+                        </button>
+
+                        <button class="quick-action" type="button" data-admin-action="categories">
+                            📚 Gérer les catégories
+                        </button>
+
+                        <button class="quick-action" type="button" data-admin-action="users">
+                            👥 Gérer les utilisateurs
+                        </button>
+
+                        <button class="quick-action" type="button" data-admin-action="statistics">
+                            📊 Voir les statistiques
+                        </button>
+
+                    </div>
+
+                </aside>
+
+            </section>
+
+        </div>
+
+    </main>
+
+
+    <script src="admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: doccampus
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    envVars:
+      - key: DOCCAMPUS_SECRET_KEY
+        generateValue: true
+      - key: DOCCAMPUS_DATABASE
+        value: /data/doccampus.sqlite3
+      - key: DOCCAMPUS_UPLOADS
+        value: /data/uploads
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+    disk:
+      name: doccampus-data
+      mountPath: /data
+      sizeGB: 1
