@@ -14,9 +14,10 @@ from typing import Annotated, Any, AsyncGenerator, Generator
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, Response
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field, field_validator
+from supabase import create_client
 from dotenv import load_dotenv
 
 
@@ -195,6 +196,30 @@ def create_app(
                             datetime.now(timezone.utc).isoformat(),
                         ),
                     )
+
+    def get_supabase_client() -> Any | None:
+        supabase_url = os.getenv("SUPABASE_URL")
+        supabase_key = os.getenv("SUPABASE_KEY")
+        if not supabase_url or not supabase_key:
+            return None
+        try:
+            return create_client(supabase_url, supabase_key)
+        except Exception:
+            return None
+
+    def get_supabase_bucket() -> str:
+        return os.getenv("SUPABASE_BUCKET", "documents")
+
+    def remove_document_from_storage(file_name: str) -> None:
+        supabase_client = get_supabase_client()
+        if supabase_client is not None:
+            try:
+                supabase_client.storage.from_(get_supabase_bucket()).remove([file_name])
+            except Exception:
+                pass
+            return
+        local_file = file_storage / file_name
+        local_file.unlink(missing_ok=True)
 
     def issue_token(user: sqlite3.Row) -> str:
         now = datetime.now(timezone.utc)
@@ -483,23 +508,39 @@ def create_app(
 
         document_id = str(uuid.uuid4())
         file_name = f"{document_id}.pdf"
-        destination = file_storage / file_name
-        total_size = 0
-        header = b""
+        file_bytes = await file.read()
+        total_size = len(file_bytes)
+        if total_size > MAX_PDF_SIZE:
+            raise HTTPException(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                detail="Le PDF dépasse la limite de 30 Mo.",
+            )
+        if not file_bytes[:5].startswith(b"%PDF-"):
+            raise HTTPException(status_code=415, detail="Le fichier envoyé n'est pas un PDF valide.")
+
+        supabase_client = get_supabase_client()
+        if supabase_client is not None:
+            try:
+                supabase_client.storage.from_(get_supabase_bucket()).upload(
+                    file_name,
+                    file_bytes,
+                    {"content-type": "application/pdf", "upsert": "false"},
+                )
+            except Exception as error:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Le stockage Supabase est indisponible pour l'upload du document.",
+                ) from error
+        else:
+            destination = file_storage / file_name
+            try:
+                with destination.open("xb") as output:
+                    output.write(file_bytes)
+            except Exception:
+                destination.unlink(missing_ok=True)
+                raise
+
         try:
-            with destination.open("xb") as output:
-                while chunk := await file.read(1024 * 1024):
-                    if not header:
-                        header = chunk[:5]
-                    total_size += len(chunk)
-                    if total_size > MAX_PDF_SIZE:
-                        raise HTTPException(
-                            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                            detail="Le PDF dépasse la limite de 30 Mo.",
-                        )
-                    output.write(chunk)
-            if not header.startswith(b"%PDF-"):
-                raise HTTPException(status_code=415, detail="Le fichier envoyé n'est pas un PDF valide.")
             with connect() as connection:
                 connection.execute(
                     """
@@ -519,7 +560,13 @@ def create_app(
                     ),
                 )
         except Exception:
-            destination.unlink(missing_ok=True)
+            if supabase_client is not None:
+                try:
+                    supabase_client.storage.from_(get_supabase_bucket()).remove([file_name])
+                except Exception:
+                    pass
+            else:
+                (file_storage / file_name).unlink(missing_ok=True)
             raise
         finally:
             await file.close()
@@ -535,7 +582,7 @@ def create_app(
         }
 
     @application.get("/api/documents/{document_id}/file")
-    def download_document(document_id: str) -> FileResponse:
+    def download_document(document_id: str) -> Response:
         with connect() as connection:
             row = connection.execute(
                 "SELECT file_name, title FROM documents WHERE id = ?",
@@ -543,14 +590,31 @@ def create_app(
             ).fetchone()
             if row is None:
                 raise HTTPException(status_code=404, detail="Document introuvable.")
-            file_path = file_storage / row["file_name"]
-            if not file_path.is_file() or file_path.parent.resolve() != file_storage.resolve():
-                raise HTTPException(status_code=404, detail="Le fichier PDF n'est plus disponible.")
+            file_name = row["file_name"]
             connection.execute(
                 "UPDATE documents SET downloads = downloads + 1 WHERE id = ?",
                 (document_id,),
             )
+
         safe_title = re.sub(r"[^A-Za-z0-9._-]+", "-", row["title"]).strip("-") or "document"
+        supabase_client = get_supabase_client()
+        if supabase_client is not None:
+            try:
+                file_bytes = supabase_client.storage.from_(get_supabase_bucket()).download(file_name)
+            except Exception as error:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Le fichier PDF n'est plus disponible sur Supabase Storage.",
+                ) from error
+            return Response(
+                content=file_bytes,
+                media_type="application/pdf",
+                headers={"Content-Disposition": f'attachment; filename="{safe_title}.pdf"'},
+            )
+
+        file_path = file_storage / file_name
+        if not file_path.is_file() or file_path.parent.resolve() != file_storage.resolve():
+            raise HTTPException(status_code=404, detail="Le fichier PDF n'est plus disponible.")
         return FileResponse(
             file_path,
             media_type="application/pdf",
@@ -570,7 +634,7 @@ def create_app(
             if row is None:
                 raise HTTPException(status_code=404, detail="Document introuvable.")
             connection.execute("DELETE FROM documents WHERE id = ?", (document_id,))
-        (file_storage / row["file_name"]).unlink(missing_ok=True)
+        remove_document_from_storage(row["file_name"])
 
     @application.get("/api/admin/users")
     def list_users(
