@@ -65,7 +65,27 @@ des redéploiements. Configure des sauvegardes régulières du disque depuis Ren
 
 Les visiteurs peuvent créer un compte depuis « Se connecter ». `py create_admin.py` crée le compte admin dans la base SQLite configurée par `DOCCAMPUS_DATABASE`. Si l'adresse existe déjà, le script demande confirmation avant de la promouvoir en administrateur et de remplacer son mot de passe. Alternative pour un déploiement automatisé : définir `ADMIN_EMAIL` et `ADMIN_PASSWORD` ensemble dans l'environnement serveur (mot de passe d'au moins 12 caractères). Depuis l'administration, un administrateur peut gérer les comptes, les catégories et les documents PDF. Les PDF doivent faire 30 Mo maximum.
 
-Les fichiers PDF déjà référencés dans la page statique doivent encore être ajoutés depuis l'administration ou copiés dans le projet avec leurs chemins configurés. La version source ne contient pas ces fichiers.
+La rubrique « Épreuves de concours » affiche les documents dont le type est
+« Concours ». Cette catégorie est disponible par défaut dans le formulaire
+d'ajout de document de l'administration ; renseigne aussi l'établissement, la
+matière et l'année pour classer chaque PDF. Les visiteurs peuvent ouvrir un
+aperçu PDF intégré, puis télécharger le fichier depuis la fiche de l'épreuve.
+Les étudiants connectés peuvent également soumettre une épreuve avec le
+formulaire public. Les fichiers soumis restent invisibles jusqu'à leur
+vérification et publication par un administrateur depuis le tableau de bord.
+Une notification avec un lien direct vers l'épreuve en attente est envoyée à
+`SUBMISSION_NOTIFICATION_EMAIL`. Configure les variables `SMTP_HOST`,
+`SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD` et `SMTP_FROM_EMAIL` dans `.env`
+ou dans l'environnement Render pour activer l'envoi. Pour Gmail, le serveur,
+le port, l'identifiant et l'expéditeur sont préconfigurés avec l'adresse de
+notification. Active la validation en deux étapes, génère un mot de passe
+d'application et place-le dans `SMTP_PASSWORD` sans le partager dans le chat.
+Définis `DOCCAMPUS_PUBLIC_URL` avec l'URL publique du site pour que le lien dans
+l'e-mail ouvre le bon domaine. Si SMTP n'est pas configuré ou si l'envoi échoue,
+l'épreuve reste enregistrée en attente et le formulaire affiche clairement que
+la notification n'a pas été envoyée.
+
+Les six documents d'exemple de la page référencent des PDF qui ne sont pas fournis dans la version source. Pour les rendre téléchargeables, ajoute-les via l'administration ou place-les sous `documents/` en conservant le chemin correspondant au bouton. Par exemple, `documents/fds/mathematiques/analyse-mathematique.pdf`. Si le fichier est absent, la page de téléchargement explique comment l'ajouter.
 
 ## Paiement Mixx by Yas
 

@@ -25,12 +25,17 @@
         rel="stylesheet"
     >
 
-    <link rel="stylesheet" href="style.css">
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    >
+
+    <link rel="stylesheet" href="style.css?v=20261004-8">
 
     <style>
 
         body {
-            background: #F5F7FB;
+            background-color: transparent;
         }
 
         .admin-header {
@@ -111,7 +116,23 @@
             border-radius: 12px;
             background: #E5F5EE;
             margin-bottom: 17px;
-            font-size: 21px;
+            color: #1B7F5A;
+            font-size: 18px;
+        }
+
+        .stat-icon.downloads {
+            background: #EAF1FF;
+            color: #4169C1;
+        }
+
+        .stat-icon.users {
+            background: #F2ECFF;
+            color: #7651B5;
+        }
+
+        .stat-icon.subscriptions {
+            background: #FFF4DF;
+            color: #B7791F;
         }
 
         .stat-card h3 {
@@ -192,6 +213,9 @@
         }
 
         .quick-action {
+            display: flex;
+            align-items: center;
+            gap: 12px;
             min-height: 52px;
             border: 1px solid #E7EBF2;
             border-radius: 12px;
@@ -204,6 +228,18 @@
 
         .quick-action:hover {
             background: #F5F7FB;
+            border-color: #B9DCCB;
+        }
+
+        .quick-action i {
+            width: 20px;
+            color: #1B7F5A;
+            text-align: center;
+            font-size: 15px;
+        }
+
+        .add-btn i {
+            margin-right: 7px;
         }
 
         @media (max-width: 850px) {
@@ -278,7 +314,8 @@
                 href="index.html"
                 class="back-btn"
             >
-                ← Retour au site
+                <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                Retour au site
             </a>
 
         </div>
@@ -328,7 +365,7 @@
                 <div class="stat-card">
 
                     <div class="stat-icon">
-                        📄
+                        <i class="fa-solid fa-file-lines" aria-hidden="true"></i>
                     </div>
 
                     <h3 id="statDocuments">0</h3>
@@ -342,8 +379,8 @@
 
                 <div class="stat-card">
 
-                    <div class="stat-icon">
-                        ↓
+                    <div class="stat-icon downloads">
+                        <i class="fa-solid fa-download" aria-hidden="true"></i>
                     </div>
 
                     <h3 id="statDownloads">0</h3>
@@ -357,8 +394,8 @@
 
                 <div class="stat-card">
 
-                    <div class="stat-icon">
-                        👥
+                    <div class="stat-icon users">
+                        <i class="fa-solid fa-users" aria-hidden="true"></i>
                     </div>
 
                     <h3 id="statUsers">0</h3>
@@ -372,8 +409,8 @@
 
                 <div class="stat-card">
 
-                    <div class="stat-icon">
-                        ⭐
+                    <div class="stat-icon subscriptions">
+                        <i class="fa-solid fa-star" aria-hidden="true"></i>
                     </div>
 
                     <h3 id="statSubscriptions">0</h3>
@@ -403,7 +440,8 @@
                         </h2>
 
                         <button class="add-btn" type="button">
-                            + Ajouter
+                            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                            Ajouter
                         </button>
 
                     </div>
@@ -462,19 +500,23 @@
                     <div class="quick-actions">
 
                         <button class="quick-action" type="button" data-admin-action="add-document">
-                            📄 Ajouter un document
+                            <i class="fa-solid fa-file-circle-plus" aria-hidden="true"></i>
+                            <span>Ajouter un document</span>
                         </button>
 
                         <button class="quick-action" type="button" data-admin-action="categories">
-                            📚 Gérer les catégories
+                            <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+                            <span>Gérer les catégories</span>
                         </button>
 
                         <button class="quick-action" type="button" data-admin-action="users">
-                            👥 Gérer les utilisateurs
+                            <i class="fa-solid fa-user-group" aria-hidden="true"></i>
+                            <span>Gérer les utilisateurs</span>
                         </button>
 
                         <button class="quick-action" type="button" data-admin-action="statistics">
-                            📊 Voir les statistiques
+                            <i class="fa-solid fa-chart-column" aria-hidden="true"></i>
+                            <span>Voir les statistiques</span>
                         </button>
 
                     </div>
@@ -488,6 +530,6 @@
     </main>
 
 
-    <script src="admin.js"></script>
+    <script src="admin.js?v=20261004-3"></script>
 </body>
 </html>

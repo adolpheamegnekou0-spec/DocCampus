@@ -109,11 +109,28 @@ function createSavedDocumentCard(savedDocument) {
     const button = document.createElement("button");
     button.className = "download-btn";
     button.type = "button";
-    button.dataset.file = savedDocument.file ||
+    const downloadUrl = savedDocument.file ||
         (savedDocument.id ? `/api/documents/${encodeURIComponent(savedDocument.id)}/file` : "");
+    button.dataset.file = downloadUrl;
     button.setAttribute("aria-label", `Ouvrir ${savedDocument.title}`);
     button.innerHTML = '<i class="fa-solid fa-download"></i>';
-    card.append(icon, info, button);
+    const actions = document.createElement("div");
+    actions.className = "document-actions";
+    if (card.dataset.type.includes("concours")) {
+        const preview = document.createElement("button");
+        preview.className = "preview-btn";
+        preview.type = "button";
+        preview.dataset.previewUrl = savedDocument.preview ||
+            (savedDocument.id
+                ? `/api/documents/${encodeURIComponent(savedDocument.id)}/preview`
+                : (savedDocument.file || "").replace(/^documents\//, "/preview/"));
+        preview.dataset.downloadUrl = downloadUrl;
+        preview.setAttribute("aria-label", `Prévisualiser ${savedDocument.title}`);
+        preview.innerHTML = '<i class="fa-solid fa-eye" aria-hidden="true"></i><span>Aperçu</span>';
+        actions.appendChild(preview);
+    }
+    actions.appendChild(button);
+    card.append(icon, info, actions);
     return card;
 }
 
@@ -121,9 +138,16 @@ function loadSavedDocuments() {
     const documentsList = document.getElementById("documentsList");
     readSavedDocuments().forEach(savedDocument => {
         if (savedDocument && savedDocument.title) {
-            documentsList.appendChild(createSavedDocumentCard(savedDocument));
+            const card = createSavedDocumentCard(savedDocument);
+            documentsList.appendChild(card);
+            appendConcoursCard(card);
         }
     });
+}
+
+function appendConcoursCard(documentCard) {
+    if (!normalizeText(documentCard.dataset.type).includes("concours")) return;
+    document.getElementById("concoursList").appendChild(documentCard.cloneNode(true));
 }
 
 async function loadRemoteContent() {
@@ -136,7 +160,9 @@ async function loadRemoteContent() {
         ]);
         const documentsList = document.getElementById("documentsList");
         documents.forEach(doc => {
-            documentsList.appendChild(createSavedDocumentCard(doc));
+            const card = createSavedDocumentCard(doc);
+            documentsList.appendChild(card);
+            appendConcoursCard(card);
         });
         const filterRow = document.querySelector(".filters");
         categories.forEach(category => {
@@ -157,6 +183,7 @@ async function loadRemoteContent() {
                     filter.classList.toggle("active", active);
                     filter.setAttribute("aria-pressed", String(active));
                 });
+                delete document.body.dataset.selectedFaculty;
                 applyDocumentFilters();
             });
         });
@@ -188,13 +215,45 @@ function applyDocumentFilters() {
         const facultyMatches = !currentFaculty ||
             (subject && normalizeText(subject.textContent).startsWith(normalizeText(currentFaculty)));
         const visible = typeMatches && textMatches && facultyMatches;
-
         card.hidden = !visible;
         if (visible) visibleCount += 1;
     });
 
     document.getElementById("documentCount").textContent = visibleCount;
     document.getElementById("emptyState").classList.toggle("hidden", visibleCount !== 0);
+
+    let concoursCount = 0;
+    document.querySelectorAll("#concoursList .document-card").forEach(card => {
+        const visible = !search || normalizeText(card.textContent).includes(search);
+        card.hidden = !visible;
+        if (visible) concoursCount += 1;
+    });
+    document.getElementById("concoursCount").textContent = concoursCount;
+    document.getElementById("concoursEmpty").classList.toggle("hidden", concoursCount !== 0);
+}
+
+function openDocumentPreview(button) {
+    const card = button.closest(".document-card");
+    const dialog = document.getElementById("documentPreviewDialog");
+    const previewUrl = button.dataset.previewUrl;
+    if (!previewUrl) {
+        showNotice("Aucun fichier PDF n'est associé à cette épreuve.");
+        return;
+    }
+
+    document.getElementById("documentPreviewTitle").textContent =
+        card.querySelector(".document-info h3").textContent;
+    document.getElementById("documentPreviewMeta").textContent =
+        `${card.querySelector(".subject").textContent} • ${card.querySelector(".document-year").textContent}`.trim();
+    document.getElementById("documentPreviewFrame").src = previewUrl;
+    document.getElementById("documentPreviewDownload").href = button.dataset.downloadUrl;
+    dialog.showModal();
+}
+
+function closeDocumentPreview() {
+    const dialog = document.getElementById("documentPreviewDialog");
+    document.getElementById("documentPreviewFrame").src = "about:blank";
+    dialog.close();
 }
 
 function closeFacultyModal() {
@@ -221,7 +280,7 @@ function openFacultyModal(button) {
         const program = document.createElement("div");
         program.className = "program-item";
         const label = document.createElement("strong");
-        label.textContent = "Formation";
+        label.textContent = "Repère";
         program.append(label, document.createTextNode(tag.textContent));
         programsList.appendChild(program);
     });
@@ -250,7 +309,9 @@ function openFacultyModal(button) {
                 closeFacultyModal();
                 document.body.dataset.selectedFaculty = code;
                 document.querySelectorAll(".filter").forEach(filter => {
-                    filter.classList.toggle("active", filter.dataset.filter === "all");
+                    const active = filter.dataset.filter === "all";
+                    filter.classList.toggle("active", active);
+                    filter.setAttribute("aria-pressed", String(active));
                 });
                 applyDocumentFilters();
                 document.getElementById("documents").scrollIntoView({ behavior: "smooth" });
@@ -281,6 +342,7 @@ function setupSiteControls() {
                 filter.classList.toggle("active", active);
                 filter.setAttribute("aria-pressed", String(active));
             });
+            delete document.body.dataset.selectedFaculty;
             applyDocumentFilters();
         });
     });
@@ -314,34 +376,50 @@ function setupSiteControls() {
         button.addEventListener("click", () => openFacultyModal(button));
     });
 
+    document.querySelectorAll(".download-btn").forEach(button => {
+        button.type = "button";
+    });
+
     document.getElementById("facultyModalClose").addEventListener("click", closeFacultyModal);
     document.getElementById("facultyModal").addEventListener("click", event => {
         if (event.target.id === "facultyModal") closeFacultyModal();
     });
+    document.getElementById("documentPreviewClose").addEventListener("click", closeDocumentPreview);
+    document.getElementById("documentPreviewDialog").addEventListener("click", event => {
+        if (event.target === event.currentTarget) closeDocumentPreview();
+    });
+    document.getElementById("documentPreviewDialog").addEventListener("cancel", event => {
+        event.preventDefault();
+        closeDocumentPreview();
+    });
 
-    document.querySelectorAll(".download-btn").forEach(button => {
-        button.type = "button";
-        button.addEventListener("click", () => {
-            const file = button.dataset.file;
-            if (!file) {
-                showNotice("Aucun fichier PDF n'a été associé à ce document.");
-                return;
-            }
-            if (/^https?:\/\//i.test(file)) {
-                window.open(file, "_blank", "noopener");
-                return;
-            }
-            if (button.closest(".document-card").dataset.apiDocumentId) {
-                window.open(file, "_blank", "noopener");
-                return;
-            }
-            if (button.closest(".document-card").dataset.savedDocument === "true" &&
-                !/^[a-z][a-z\d+.-]*:/i.test(file)) {
-                window.open(file, "_blank", "noopener");
-                return;
-            }
-            showNotice("Le bouton fonctionne, mais le fichier PDF indiqué n'est pas présent dans le dossier du site.");
-        });
+    document.addEventListener("click", event => {
+        if (!(event.target instanceof Element)) return;
+        const previewButton = event.target.closest(".preview-btn");
+        if (previewButton) {
+            openDocumentPreview(previewButton);
+            return;
+        }
+        const button = event.target.closest(".download-btn");
+        if (!button) return;
+
+        const file = button.dataset.file;
+        const card = button.closest(".document-card");
+        if (!file) {
+            showNotice("Aucun fichier PDF n'a été associé à ce document.");
+            return;
+        }
+        if (/^https?:\/\//i.test(file) ||
+            card.dataset.apiDocumentId ||
+            (card.dataset.savedDocument === "true" && !/^[a-z][a-z\d+.-]*:/i.test(file))) {
+            window.open(file, "_blank", "noopener");
+            return;
+        }
+        if (/^documents\/[^?#]+\.pdf$/i.test(file)) {
+            window.open(`/${file}`, "_blank", "noopener");
+            return;
+        }
+        showNotice("Le bouton fonctionne, mais le fichier PDF indiqué n'est pas présent dans le dossier du site.");
     });
 
     document.getElementById("premiumBtn").addEventListener("click", () => {
@@ -399,6 +477,38 @@ function setupSiteControls() {
 
     document.getElementById("accountModeToggle").addEventListener("click", () => {
         setAccountMode(accountMode === "login" ? "register" : "login");
+    });
+    document.getElementById("concoursSubmissionForm").addEventListener("submit", async event => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        if (!form.reportValidity()) return;
+
+        if (!localStorage.getItem(accessTokenKey)) {
+            setAccountMode("register");
+            accountModal.classList.add("show");
+            document.getElementById("concoursSubmissionMessage").textContent =
+                "Crée un compte ou connecte-toi pour envoyer une épreuve.";
+            return;
+        }
+
+        const submitButton = form.querySelector('[type="submit"]');
+        submitButton.disabled = true;
+        document.getElementById("concoursSubmissionMessage").textContent = "";
+        try {
+            const result = await apiRequest("/api/documents/submissions", {
+                method: "POST",
+                body: new FormData(form)
+            });
+            form.reset();
+            document.getElementById("concoursSubmissionMessage").textContent =
+                result.email_message ||
+                "Épreuve envoyée. Elle apparaîtra sur le site après validation par l’administration.";
+            showNotice(result.email_message || "Ton épreuve a été envoyée pour vérification.");
+        } catch (error) {
+            document.getElementById("concoursSubmissionMessage").textContent = error.message;
+        } finally {
+            submitButton.disabled = false;
+        }
     });
     accountButton.addEventListener("click", () => {
         if (localStorage.getItem(accessTokenKey)) {

@@ -64,15 +64,70 @@ function renderDocuments(documents) {
     body.replaceChildren();
     documents.forEach(doc => {
         const row = document.createElement("tr");
-        appendTableCell(row, doc.title);
+        const documentCell = appendTableCell(row, "");
+        const title = document.createElement("strong");
+        title.textContent = doc.title;
+        documentCell.appendChild(title);
+        if (doc.submitter_email) {
+            const submitter = document.createElement("small");
+            submitter.className = "admin-document-submitter";
+            submitter.textContent = `Proposé par ${doc.submitter_email}`;
+            documentCell.appendChild(submitter);
+        }
         appendTableCell(row, doc.type);
         appendTableCell(row, String(doc.downloads));
         const statusCell = appendTableCell(row, "");
         const badge = document.createElement("span");
-        badge.className = "status";
-        badge.textContent = "Actif";
+        badge.className = doc.status === "pending" ? "status status-pending" : "status";
+        badge.textContent = doc.status === "pending" ? "À valider" : "Publié";
         statusCell.appendChild(badge);
         const actionCell = appendTableCell(row, "");
+        if (doc.status === "pending" && doc.type === "Concours") {
+            const previewButton = document.createElement("button");
+            previewButton.type = "button";
+            previewButton.className = "admin-row-action";
+            previewButton.textContent = "Aperçu";
+            previewButton.addEventListener("click", () => showAdminDocumentPreview(doc));
+            actionCell.appendChild(previewButton);
+
+            const approveButton = document.createElement("button");
+            approveButton.type = "button";
+            approveButton.className = "admin-row-action admin-row-approve";
+            approveButton.textContent = "Publier";
+            approveButton.addEventListener("click", async () => {
+                try {
+                    await apiRequest(`/api/admin/documents/${encodeURIComponent(doc.id)}/approve`, {
+                        method: "POST"
+                    });
+                    await refreshDashboard();
+                    showAdminNotice("Épreuve vérifiée et publiée.");
+                } catch (error) {
+                    showAdminNotice(error.message);
+                }
+            });
+            actionCell.appendChild(approveButton);
+
+            const rejectButton = document.createElement("button");
+            rejectButton.type = "button";
+            rejectButton.className = "admin-row-action admin-row-reject";
+            rejectButton.textContent = "Refuser";
+            rejectButton.addEventListener("click", async () => {
+                if (!window.confirm(`Refuser et supprimer la proposition « ${doc.title} » ?`)) return;
+                try {
+                    await apiRequest(`/api/admin/documents/${encodeURIComponent(doc.id)}/submission`, {
+                        method: "DELETE"
+                    });
+                    await refreshDashboard();
+                    showAdminNotice("Proposition refusée et supprimée.");
+                } catch (error) {
+                    showAdminNotice(error.message);
+                }
+            });
+            actionCell.appendChild(rejectButton);
+            body.appendChild(row);
+            return;
+        }
+
         const removeButton = document.createElement("button");
         removeButton.type = "button";
         removeButton.className = "admin-row-action";
@@ -94,6 +149,73 @@ function renderDocuments(documents) {
     });
 }
 
+async function showAdminDocumentPreview(doc) {
+    try {
+        const headers = new Headers();
+        const token = localStorage.getItem(tokenKey);
+        if (token) headers.set("Authorization", `Bearer ${token}`);
+        const response = await fetch(
+            `${apiBase}/api/admin/documents/${encodeURIComponent(doc.id)}/preview`,
+            { headers }
+        );
+        if (!response.ok) {
+            const payload = await response.json().catch(() => ({}));
+            throw new Error(typeof payload.detail === "string"
+                ? payload.detail
+                : `Erreur serveur (${response.status}).`);
+        }
+
+        const objectUrl = URL.createObjectURL(await response.blob());
+        let dialog = document.getElementById("adminDocumentPreview");
+        if (!dialog) {
+            dialog = document.createElement("dialog");
+            dialog.id = "adminDocumentPreview";
+            dialog.className = "admin-document-preview";
+            dialog.innerHTML = `
+                <header>
+                    <h2 class="admin-document-preview-title"></h2>
+                    <button type="button" class="admin-document-preview-close" aria-label="Fermer l’aperçu">
+                        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                    </button>
+                </header>
+                <iframe title="Aperçu de l’épreuve en attente"></iframe>
+            `;
+            document.body.appendChild(dialog);
+            dialog.querySelector(".admin-document-preview-close").addEventListener("click", () => {
+                dialog.close();
+            });
+            dialog.addEventListener("close", () => {
+                URL.revokeObjectURL(dialog.dataset.objectUrl);
+                dialog.querySelector("iframe").src = "about:blank";
+            });
+        }
+        if (dialog.dataset.objectUrl) URL.revokeObjectURL(dialog.dataset.objectUrl);
+        dialog.dataset.objectUrl = objectUrl;
+        dialog.querySelector(".admin-document-preview-title").textContent = doc.title;
+        dialog.querySelector("iframe").src = objectUrl;
+        dialog.showModal();
+        return true;
+    } catch (error) {
+        showAdminNotice(error.message);
+        return false;
+    }
+}
+
+async function openEmailSubmission(documents) {
+    const submissionId = new URLSearchParams(window.location.search).get("submission");
+    if (!submissionId) return;
+    const submission = documents.find(doc => doc.id === submissionId);
+    if (!submission) {
+        showAdminNotice("L’épreuve du lien e-mail est introuvable dans l’administration.");
+        return;
+    }
+    if (await showAdminDocumentPreview(submission)) {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("submission");
+        window.history.replaceState({}, "", url);
+    }
+}
+
 async function refreshDashboard() {
     const [documents, categories, stats] = await Promise.all([
         apiRequest("/api/admin/documents"),
@@ -106,62 +228,65 @@ async function refreshDashboard() {
     document.getElementById("statDownloads").textContent = stats.downloads;
     document.getElementById("statUsers").textContent = stats.users;
     document.getElementById("statSubscriptions").textContent = stats.subscriptions;
+    return documents;
 }
 
 function createDocumentDialog() {
     let dialog = document.getElementById("documentEditor");
-    if (dialog) return dialog;
+    if (!dialog) {
+        dialog = document.createElement("dialog");
+        dialog.id = "documentEditor";
+        dialog.className = "admin-dialog";
+        dialog.innerHTML = `
+            <form class="admin-dialog-form" id="documentEditorForm">
+                <h2>Ajouter un document PDF</h2>
+                <label>Titre <input name="title" required maxlength="120"></label>
+                <label>Type <select name="type" required></select></label>
+                <label>Faculté / école (code) <input name="institution" required maxlength="40" placeholder="FDS"></label>
+                <label>Matière <input name="subject" required maxlength="80"></label>
+                <label>Année <input name="year" required inputmode="numeric" pattern="[0-9]{4}" maxlength="4" value="${new Date().getFullYear()}"></label>
+                <label>Fichier PDF <input name="file" type="file" accept="application/pdf,.pdf" required></label>
+                <p class="admin-dialog-note">PDF uniquement, 30 Mo maximum. Le fichier sera conservé sur le serveur.</p>
+                <div class="admin-dialog-actions">
+                    <button type="button" class="dialog-cancel">Annuler</button>
+                    <button type="submit" class="dialog-save">Ajouter le document</button>
+                </div>
+            </form>
+        `;
+        document.body.appendChild(dialog);
 
-    dialog = document.createElement("dialog");
-    dialog.id = "documentEditor";
-    dialog.className = "admin-dialog";
-    dialog.innerHTML = `
-        <form class="admin-dialog-form" id="documentEditorForm">
-            <h2>Ajouter un document PDF</h2>
-            <label>Titre <input name="title" required maxlength="120"></label>
-            <label>Type <select name="type" required></select></label>
-            <label>Faculté / école (code) <input name="institution" required maxlength="40" placeholder="FDS"></label>
-            <label>Matière <input name="subject" required maxlength="80"></label>
-            <label>Année <input name="year" required inputmode="numeric" pattern="[0-9]{4}" maxlength="4" value="${new Date().getFullYear()}"></label>
-            <label>Fichier PDF <input name="file" type="file" accept="application/pdf,.pdf" required></label>
-            <p class="admin-dialog-note">PDF uniquement, 30 Mo maximum. Le fichier sera conservé sur le serveur.</p>
-            <div class="admin-dialog-actions">
-                <button type="button" class="dialog-cancel">Annuler</button>
-                <button type="submit" class="dialog-save">Ajouter le document</button>
-            </div>
-        </form>
-    `;
-    document.body.appendChild(dialog);
+        const form = dialog.querySelector("form");
+        dialog.querySelector(".dialog-cancel").addEventListener("click", () => dialog.close());
+        form.addEventListener("submit", async event => {
+            event.preventDefault();
+            if (!form.reportValidity()) return;
+            const data = new FormData(form);
+            const submitButton = form.querySelector('[type="submit"]');
+            submitButton.disabled = true;
+            try {
+                await apiRequest("/api/admin/documents", {
+                    method: "POST",
+                    body: data
+                });
+                dialog.close();
+                form.reset();
+                await refreshDashboard();
+                showAdminNotice("Document publié dans la bibliothèque.");
+            } catch (error) {
+                showAdminNotice(error.message);
+            } finally {
+                submitButton.disabled = false;
+            }
+        });
+    }
 
-    const form = dialog.querySelector("form");
-    const typeSelect = form.elements.type;
+    const typeSelect = dialog.querySelector('select[name="type"]');
+    typeSelect.replaceChildren();
     adminCategories.forEach(category => {
         const option = document.createElement("option");
         option.value = category.name;
         option.textContent = category.name;
         typeSelect.appendChild(option);
-    });
-    dialog.querySelector(".dialog-cancel").addEventListener("click", () => dialog.close());
-    form.addEventListener("submit", async event => {
-        event.preventDefault();
-        if (!form.reportValidity()) return;
-        const data = new FormData(form);
-        const submitButton = form.querySelector('[type="submit"]');
-        submitButton.disabled = true;
-        try {
-            await apiRequest("/api/admin/documents", {
-                method: "POST",
-                body: data
-            });
-            dialog.close();
-            form.reset();
-            await refreshDashboard();
-            showAdminNotice("Document publié dans la bibliothèque.");
-        } catch (error) {
-            showAdminNotice(error.message);
-        } finally {
-            submitButton.disabled = false;
-        }
     });
     return dialog;
 }
@@ -276,7 +401,7 @@ async function showCategories() {
             const name = document.createElement("span");
             name.textContent = category.name;
             row.appendChild(name);
-            if (!["Cours", "TD", "Annale", "Corrigé"].includes(category.name)) {
+            if (!["Cours", "TD", "Annale", "Corrigé", "Concours"].includes(category.name)) {
                 const remove = document.createElement("button");
                 remove.type = "button";
                 remove.className = "admin-row-action";
@@ -315,8 +440,9 @@ async function loginAsAdmin(email, password) {
         localStorage.removeItem(tokenKey);
         throw new Error("Ce compte n'a pas les droits administrateur.");
     }
-    await refreshDashboard();
+    const documents = await refreshDashboard();
     setAuthenticated(true);
+    await openEmailSubmission(documents);
 }
 
 async function restoreAdminSession() {
@@ -328,8 +454,9 @@ async function restoreAdminSession() {
             localStorage.removeItem(tokenKey);
             return;
         }
-        await refreshDashboard();
+        const documents = await refreshDashboard();
         setAuthenticated(true);
+        await openEmailSubmission(documents);
     } catch (error) {
         localStorage.removeItem(tokenKey);
         setAdminMessage("Session expirée. Connecte-toi à nouveau.");

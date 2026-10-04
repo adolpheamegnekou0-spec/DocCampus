@@ -17,6 +17,20 @@ services:
         sync: false
       - key: ADMIN_PASSWORD
         sync: false
+      - key: SUBMISSION_NOTIFICATION_EMAIL
+        value: adolpheamegnekou0@gmail.com
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USERNAME
+        value: adolpheamegnekou0@gmail.com
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: SMTP_FROM_EMAIL
+        value: adolpheamegnekou0@gmail.com
+      - key: DOCCAMPUS_PUBLIC_URL
+        sync: false
     disk:
       name: doccampus-data
       mountPath: /data

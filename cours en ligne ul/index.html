@@ -34,7 +34,7 @@
     >
 
     <!-- CSS -->
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=20261004-10">
 </head>
 
 <body>
@@ -48,7 +48,7 @@
 
     <div class="container header-inner">
 
-        <a href="#" class="logo" aria-label="DocCampus">
+        <a href="#accueil" class="logo" aria-label="DocCampus">
 
             <img
                 class="logo-mark"
@@ -56,7 +56,9 @@
                 alt="Logo DocCampus"
                 width="760"
                 height="360"
+                onerror="this.hidden = true; this.parentElement.classList.add('logo-fallback');"
             >
+            <span class="logo-label" aria-hidden="true">DocCampus</span>
 
         </a>
 
@@ -73,6 +75,10 @@
 
             <a href="#documents">
                 Documents
+            </a>
+
+            <a href="#concours">
+                Concours
             </a>
 
             <a href="#apropos">
@@ -94,6 +100,7 @@
         <button
             class="menu-btn"
             id="menuBtn"
+            type="button"
             aria-label="Ouvrir le menu"
         >
             <i class="fa-solid fa-bars"></i>
@@ -164,7 +171,7 @@
                     autocomplete="off"
                 >
 
-                <button id="searchBtn">
+                <button id="searchBtn" type="button">
                     Rechercher
                 </button>
 
@@ -212,7 +219,6 @@
 
             </div>
 
-
             <!-- STATISTIQUES -->
 
             <div class="hero-stats">
@@ -231,9 +237,9 @@
 
                 <div class="hero-stat">
 
-                    <strong>20+</strong>
+                    <strong>26</strong>
 
-                    <span>Facultés & écoles</span>
+                    <span>Établissements UL</span>
 
                 </div>
 
@@ -321,6 +327,7 @@
             <button
                 class="premium-btn"
                 id="premiumBtn"
+                type="button"
             >
                 <i class="fa-solid fa-bolt"></i>
                 Passer en illimité
@@ -385,6 +392,12 @@
 
         </div>
 
+        <p class="establishment-source">
+            Répertoire des établissements vérifié sur le
+            <a href="https://univ-lome.tg/etablissements/" target="_blank" rel="noopener noreferrer">
+                site officiel de l’Université de Lomé
+            </a>.
+        </p>
 
         <!-- GRILLE -->
 
@@ -1041,31 +1054,27 @@
 
             <article
                 class="faculty-card"
-                data-search="I2M IAE IAEIM Logistique Management Energie Maintenance"
+                data-search="I2M Institut des Métiers de la Mer métiers mer maritime"
             >
 
-                <div class="faculty-icon black">
-                    <i class="fa-solid fa-industry"></i>
+                <div class="faculty-icon green">
+                    <i class="fa-solid fa-water"></i>
                 </div>
 
                 <div class="faculty-code">
-                    I2M / IAE / IAEIM
+                    I2M
                 </div>
 
                 <h3>
-                    Instituts spécialisés
-                    de Logistique et Management
+                    Institut des Métiers de la Mer
                 </h3>
 
                 <p>
-                    Logistique hospitalière,
-                    management public et maintenance industrielle.
+                    Institut de formation de l’Université de Lomé.
                 </p>
 
                 <div class="faculty-tags">
-                    <span>Logistique</span>
-                    <span>Management</span>
-                    <span>Maintenance</span>
+                    <span>Institut</span>
                 </div>
 
                 <button
@@ -1078,6 +1087,135 @@
 
             </article>
 
+            <!-- IAE -->
+
+            <article class="faculty-card" data-search="IAE Institut d’Administration des Entreprises administration entreprises">
+                <div class="faculty-icon black"><i class="fa-solid fa-building"></i></div>
+                <div class="faculty-code">IAE</div>
+                <h3>Institut d’Administration des Entreprises</h3>
+                <p>Institut répertorié parmi les établissements de l’Université de Lomé.</p>
+                <div class="faculty-tags"><span>Institut</span></div>
+                <button class="faculty-btn" type="button" data-faculty="iae">
+                    Voir les documents <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </article>
+
+            <!-- IAEIM -->
+
+            <article class="faculty-card" data-search="IAEIM Institut Afrique Europe Innovation Métiers">
+                <div class="faculty-icon yellow"><i class="fa-solid fa-lightbulb"></i></div>
+                <div class="faculty-code">IAEIM</div>
+                <h3>Institut Afrique Europe de l’Innovation et des Métiers</h3>
+                <p>Institut répertorié parmi les établissements de l’Université de Lomé.</p>
+                <div class="faculty-tags"><span>Institut</span></div>
+                <button class="faculty-btn" type="button" data-faculty="iaeim">
+                    Voir les documents <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </article>
+
+            <!-- ESAAd -->
+
+            <article class="faculty-card" data-search="ESAAd École Supérieure des Assistants Administratifs">
+                <div class="faculty-icon green"><i class="fa-solid fa-briefcase"></i></div>
+                <div class="faculty-code">ESAAd</div>
+                <h3>École Supérieure des Assistants Administratifs</h3>
+                <p>École répertoriée parmi les établissements de l’Université de Lomé.</p>
+                <div class="faculty-tags"><span>École</span></div>
+                <button class="faculty-btn" type="button" data-faculty="esaad">
+                    Voir les documents <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </article>
+
+            <!-- IES -->
+
+            <article class="faculty-card" data-search="IES Institut d’Études et Stratégiques">
+                <div class="faculty-icon black"><i class="fa-solid fa-compass"></i></div>
+                <div class="faculty-code">IES</div>
+                <h3>Institut d’Études et Stratégiques</h3>
+                <p>Institut répertorié parmi les établissements de l’Université de Lomé.</p>
+                <div class="faculty-tags"><span>Institut</span></div>
+                <button class="faculty-btn" type="button" data-faculty="ies">
+                    Voir les documents <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </article>
+
+            <!-- CFC -->
+
+            <article class="faculty-card" data-search="CFC Centre de Formation Continue formation continue">
+                <div class="faculty-icon yellow"><i class="fa-solid fa-graduation-cap"></i></div>
+                <div class="faculty-code">CFC</div>
+                <h3>Centre de Formation Continue</h3>
+                <p>Centre de formation répertorié par l’Université de Lomé.</p>
+                <div class="faculty-tags"><span>Centre de formation</span></div>
+                <button class="faculty-btn" type="button" data-faculty="cfc">
+                    Voir les documents <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </article>
+
+            <!-- CERSA -->
+
+            <article class="faculty-card" data-search="CERSA Centre d’Excellence Régional sur les Sciences Aviaires">
+                <div class="faculty-icon green"><i class="fa-solid fa-feather-pointed"></i></div>
+                <div class="faculty-code">CERSA</div>
+                <h3>Centre d’Excellence Régional sur les Sciences Aviaires</h3>
+                <p>Centre d’excellence répertorié par l’Université de Lomé.</p>
+                <div class="faculty-tags"><span>Centre d’excellence</span></div>
+                <button class="faculty-btn" type="button" data-faculty="cersa">
+                    Voir les documents <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </article>
+
+            <!-- CERME -->
+
+            <article class="faculty-card" data-search="CERME Centre d’Excellence Régional pour la Maîtrise de l’Électricité">
+                <div class="faculty-icon yellow"><i class="fa-solid fa-bolt"></i></div>
+                <div class="faculty-code">CERME</div>
+                <h3>Centre d’Excellence Régional pour la Maîtrise de l’Électricité</h3>
+                <p>Centre d’excellence répertorié par l’Université de Lomé.</p>
+                <div class="faculty-tags"><span>Centre d’excellence</span></div>
+                <button class="faculty-btn" type="button" data-faculty="cerme">
+                    Voir les documents <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </article>
+
+            <!-- CERViDA-DOUNEDON -->
+
+            <article class="faculty-card" data-search="CERViDA DOUNEDON Centre d’Excellence Régional Villes Durables Afrique">
+                <div class="faculty-icon green"><i class="fa-solid fa-city"></i></div>
+                <div class="faculty-code">CERViDA-DOUNEDON</div>
+                <h3>Centre d’Excellence Régional pour les Villes Durables en Afrique</h3>
+                <p>Centre d’excellence répertorié par l’Université de Lomé.</p>
+                <div class="faculty-tags"><span>Centre d’excellence</span></div>
+                <button class="faculty-btn" type="button" data-faculty="cervida-dounedon">
+                    Voir les documents <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </article>
+
+            <!-- CI2L -->
+
+            <article class="faculty-card" data-search="CI2L Centre International de Langues de Lomé langues">
+                <div class="faculty-icon black"><i class="fa-solid fa-language"></i></div>
+                <div class="faculty-code">CI2L</div>
+                <h3>Centre International de Langues de Lomé</h3>
+                <p>Centre répertorié parmi les établissements de l’Université de Lomé.</p>
+                <div class="faculty-tags"><span>Centre</span></div>
+                <button class="faculty-btn" type="button" data-faculty="ci2l">
+                    Voir les documents <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </article>
+
+            <!-- WASCAL -->
+
+            <article class="faculty-card" data-search="WASCAL Centre">
+                <div class="faculty-icon green"><i class="fa-solid fa-leaf"></i></div>
+                <div class="faculty-code">WASCAL</div>
+                <h3>Centre WASCAL</h3>
+                <p>Centre d’excellence répertorié par l’Université de Lomé.</p>
+                <div class="faculty-tags"><span>Centre d’excellence</span></div>
+                <button class="faculty-btn" type="button" data-faculty="wascal">
+                    Voir les documents <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </article>
 
         </div>
 
@@ -1098,10 +1236,111 @@
             </p>
         </div>
 
+        <aside class="official-learning-card">
+            <div class="official-learning-icon" aria-hidden="true">
+                <i class="fa-solid fa-book-open"></i>
+            </div>
+            <div class="official-learning-copy">
+                <h3>Unités d’enseignement officielles</h3>
+                <p>
+                    Consulte le portail @Learn de l’Université de Lomé pour les cours
+                    et ressources pédagogiques publiés par les établissements.
+                </p>
+            </div>
+            <a
+                class="official-learning-link"
+                href="https://elearn.univ-lome.tg/"
+                target="_blank"
+                rel="noopener noreferrer"
+            >
+                Ouvrir @Learn
+                <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+            </a>
+        </aside>
+
     </div>
 
 </section>
 
+
+<!-- ============================================================
+     ÉPREUVES DE CONCOURS
+     ============================================================ -->
+
+<section class="concours-section" id="concours">
+    <div class="container">
+        <div class="section-heading">
+            <div>
+                <span class="section-label">Préparation aux concours</span>
+                <h2>Épreuves de concours</h2>
+                <p class="section-description">
+                    Retrouve les anciennes épreuves PDF classées par établissement,
+                    matière et année.
+                </p>
+            </div>
+            <div class="document-count-box">
+                <span id="concoursCount">0</span>
+                épreuve(s)
+            </div>
+        </div>
+
+        <div class="concours-empty" id="concoursEmpty">
+            <i class="fa-solid fa-file-circle-question" aria-hidden="true"></i>
+            <h3>Aucune épreuve publiée pour le moment</h3>
+            <p>
+                Les épreuves proposées apparaîtront ici après vérification et
+                publication par l’administration.
+            </p>
+        </div>
+
+        <div class="documents-list concours-list" id="concoursList"></div>
+
+        <div class="concours-submit-panel">
+            <div class="concours-submit-heading">
+                <i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i>
+                <div>
+                    <h3>Partager une épreuve</h3>
+                    <p>La publication se fera après vérification par l’administration.</p>
+                </div>
+            </div>
+            <form class="concours-submit-form" id="concoursSubmissionForm">
+                <label>
+                    Titre de l’épreuve
+                    <input name="title" maxlength="120" placeholder="Ex. Concours d’entrée — Mathématiques" required>
+                </label>
+                <label>
+                    Faculté / école
+                    <input name="institution" maxlength="40" placeholder="Ex. FDD, ESA..." required>
+                </label>
+                <label>
+                    Matière
+                    <input name="subject" maxlength="80" placeholder="Ex. Français, Mathématiques" required>
+                </label>
+                <label>
+                    Année de l’épreuve
+                    <input name="year" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="2025" required>
+                </label>
+                <label class="concours-file-field">
+                    Fichier PDF
+                    <input name="file" type="file" accept="application/pdf,.pdf" required>
+                    <span>PDF uniquement, 30 Mo maximum.</span>
+                </label>
+                <label class="concours-rights-check">
+                    <input name="rights_confirmed" type="checkbox" value="true" required>
+                    <span>
+                        Je suis autorisé à partager ce document. Il ne contient pas de
+                        données personnelles ni de renseignements confidentiels.
+                    </span>
+                </label>
+                <p class="concours-submit-message" id="concoursSubmissionMessage" role="status" aria-live="polite"></p>
+                <button class="concours-admin-link concours-submit-button" type="submit">
+                    Envoyer pour vérification
+                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</section>
 
 
 <!-- ============================================================
@@ -1732,6 +1971,7 @@
         <button
             class="modal-close"
             id="facultyModalClose"
+            type="button"
             aria-label="Fermer"
         >
             <i class="fa-solid fa-xmark"></i>
@@ -1793,6 +2033,7 @@
         <button
             class="modal-close"
             id="premiumClose"
+            type="button"
             aria-label="Fermer"
         >
             <i class="fa-solid fa-xmark"></i>
@@ -1842,7 +2083,7 @@
         </div>
 
 
-        <button class="modal-action">
+        <button class="modal-action" type="button">
             Bientôt disponible
         </button>
 
@@ -1850,11 +2091,36 @@
 
 </div>
 
-
+<dialog class="document-preview-dialog" id="documentPreviewDialog" aria-labelledby="documentPreviewTitle">
+    <div class="document-preview-shell">
+        <header class="document-preview-header">
+            <div class="document-preview-heading">
+                <span class="document-preview-label">Épreuve de concours</span>
+                <h2 id="documentPreviewTitle"></h2>
+                <p id="documentPreviewMeta"></p>
+            </div>
+            <div class="document-preview-controls">
+                <a class="document-preview-download" id="documentPreviewDownload" href="#">
+                    <i class="fa-solid fa-download" aria-hidden="true"></i>
+                    Télécharger
+                </a>
+                <button class="document-preview-close" id="documentPreviewClose" type="button" aria-label="Fermer l’aperçu">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+            </div>
+        </header>
+        <iframe
+            class="document-preview-frame"
+            id="documentPreviewFrame"
+            title="Aperçu PDF de l’épreuve"
+            src="about:blank"
+        ></iframe>
+    </div>
+</dialog>
 
 <!-- JavaScript -->
 
-<script src="script.js"></script>
+<script src="script.js?v=20261004-10"></script>
 
 </body>
 </html>

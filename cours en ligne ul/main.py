@@ -2,31 +2,38 @@ import base64
 import hashlib
 import hmac
 import json
+import logging
 import os
 import re
 import secrets
 import sqlite3
+import smtplib
+import ssl
 import uuid
+from email.message import EmailMessage
 from contextlib import asynccontextmanager, contextmanager
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Annotated, Any, AsyncGenerator, Generator
+from urllib.parse import quote, urlsplit
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, Response
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field, field_validator
+from supabase import create_client
 from dotenv import load_dotenv
 
 
 BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR / ".env")
-DEFAULT_CATEGORIES = ("Cours", "TD", "Annale", "Corrigé")
+DEFAULT_CATEGORIES = ("Cours", "TD", "Annale", "Corrigé", "Concours")
 MAX_PDF_SIZE = 30 * 1024 * 1024
 PASSWORD_ITERATIONS = 310_000
 TOKEN_LIFETIME = timedelta(hours=12)
 bearer_scheme = HTTPBearer(auto_error=False)
+logger = logging.getLogger(__name__)
 
 
 class Credentials(BaseModel):
@@ -100,6 +107,7 @@ def create_app(
     *,
     database_path: Path | None = None,
     uploads_path: Path | None = None,
+    documents_path: Path | None = None,
     secret_key: str | None = None,
     admin_email: str | None = None,
     admin_password: str | None = None,
@@ -110,6 +118,7 @@ def create_app(
     file_storage = uploads_path or Path(
         os.getenv("DOCCAMPUS_UPLOADS", BASE_DIR / "data" / "uploads")
     )
+    public_documents = (documents_path or BASE_DIR / "documents").resolve()
     configured_secret = secret_key or os.getenv("DOCCAMPUS_SECRET_KEY")
     has_configured_secret = bool(configured_secret)
     if configured_secret is None:
@@ -117,6 +126,16 @@ def create_app(
     signing_key = configured_secret.encode("utf-8")
     initial_admin_email = (admin_email or os.getenv("ADMIN_EMAIL", "")).strip().lower()
     initial_admin_password = admin_password or os.getenv("ADMIN_PASSWORD", "")
+    notification_email = os.getenv(
+        "SUBMISSION_NOTIFICATION_EMAIL",
+        "adolpheamegnekou0@gmail.com",
+    ).strip().lower()
+    smtp_host = os.getenv("SMTP_HOST", "").strip() or "smtp.gmail.com"
+    smtp_port = int(os.getenv("SMTP_PORT", "587"))
+    smtp_username = os.getenv("SMTP_USERNAME", "").strip() or notification_email
+    smtp_password = os.getenv("SMTP_PASSWORD", "")
+    smtp_from_email = os.getenv("SMTP_FROM_EMAIL", "").strip() or smtp_username
+    public_base_url = os.getenv("DOCCAMPUS_PUBLIC_URL", "").strip().rstrip("/")
 
     @contextmanager
     def connect() -> Generator[sqlite3.Connection, None, None]:
@@ -159,7 +178,9 @@ def create_app(
                     year TEXT NOT NULL,
                     file_name TEXT NOT NULL,
                     downloads INTEGER NOT NULL DEFAULT 0,
-                    created_at TEXT NOT NULL
+                    created_at TEXT NOT NULL,
+                    status TEXT NOT NULL DEFAULT 'published',
+                    submitted_by INTEGER REFERENCES users(id) ON DELETE SET NULL
                 );
                 CREATE TABLE IF NOT EXISTS categories (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -167,6 +188,18 @@ def create_app(
                 );
                 """
             )
+            document_columns = {
+                row["name"]
+                for row in connection.execute("PRAGMA table_info(documents)").fetchall()
+            }
+            if "status" not in document_columns:
+                connection.execute(
+                    "ALTER TABLE documents ADD COLUMN status TEXT NOT NULL DEFAULT 'published'"
+                )
+            if "submitted_by" not in document_columns:
+                connection.execute(
+                    "ALTER TABLE documents ADD COLUMN submitted_by INTEGER REFERENCES users(id) ON DELETE SET NULL"
+                )
             connection.executemany(
                 "INSERT OR IGNORE INTO categories (name) VALUES (?)",
                 ((category,) for category in DEFAULT_CATEGORIES),
@@ -195,6 +228,146 @@ def create_app(
                             datetime.now(timezone.utc).isoformat(),
                         ),
                     )
+
+    def email_submission_link(
+        document_id: str,
+        title: str,
+        institution: str,
+        subject: str,
+        year: str,
+    ) -> tuple[bool, str]:
+        if not smtp_host or not smtp_from_email:
+            logger.warning("SMTP is not configured; submission notification was not sent.")
+            return False, "L’épreuve est déposée, mais l’e-mail n’a pas pu être envoyé : l’envoi e-mail n’est pas configuré."
+        if bool(smtp_username) != bool(smtp_password):
+            logger.error("SMTP authentication requires both SMTP_USERNAME and SMTP_PASSWORD.")
+            return False, "L’épreuve est déposée, mais l’e-mail n’a pas pu être envoyé : la configuration e-mail est incomplète."
+
+        recipient = notification_email or initial_admin_email
+        if not recipient:
+            logger.error("No admin recipient is configured for exam submission notifications.")
+            return False, "L’épreuve est déposée, mais aucun e-mail administrateur n’est configuré."
+        if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", recipient):
+            logger.error("The submission notification recipient address is invalid.")
+            return False, "L’épreuve est déposée, mais l’adresse e-mail de notification est invalide."
+        if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", smtp_from_email):
+            logger.error("The SMTP sender address is invalid.")
+            return False, "L’épreuve est déposée, mais l’adresse d’envoi SMTP est invalide."
+
+        if not public_base_url:
+            logger.error("DOCCAMPUS_PUBLIC_URL is not configured for submission notifications.")
+            return False, "L’épreuve est déposée, mais l’URL publique du site n’est pas configurée."
+        public_url = urlsplit(public_base_url)
+        if (
+            public_url.scheme not in {"https", "http"}
+            or not public_url.netloc
+            or public_url.username
+            or public_url.password
+            or public_url.query
+            or public_url.fragment
+            or (
+                public_url.scheme == "http"
+                and public_url.hostname not in {"localhost", "127.0.0.1"}
+            )
+        ):
+            logger.error("DOCCAMPUS_PUBLIC_URL is not a valid secure site URL.")
+            return False, "L’épreuve est déposée, mais l’URL publique du site est invalide."
+
+        review_url = f"{public_base_url}/admin.html?submission={quote(document_id, safe='')}"
+        message = EmailMessage()
+        message["Subject"] = f"Nouvelle épreuve à vérifier : {title}"
+        message["From"] = smtp_from_email
+        message["To"] = recipient
+        message.set_content(
+            "Une nouvelle épreuve de concours attend ta validation sur DocCampus.\n\n"
+            f"Titre : {title}\n"
+            f"Établissement : {institution}\n"
+            f"Matière : {subject}\n"
+            f"Année : {year}\n\n"
+            f"Ouvrir l’épreuve dans l’administration : {review_url}\n"
+        )
+
+        try:
+            if smtp_port == 465:
+                with smtplib.SMTP_SSL(
+                    smtp_host,
+                    smtp_port,
+                    timeout=15,
+                    context=ssl.create_default_context(),
+                ) as smtp:
+                    if smtp_username:
+                        smtp.login(smtp_username, smtp_password)
+                    smtp.send_message(message)
+            else:
+                with smtplib.SMTP(smtp_host, smtp_port, timeout=15) as smtp:
+                    smtp.starttls(context=ssl.create_default_context())
+                    if smtp_username:
+                        smtp.login(smtp_username, smtp_password)
+                    smtp.send_message(message)
+        except (OSError, smtplib.SMTPException, ValueError):
+            logger.exception("Could not send notification for exam submission %s.", document_id)
+            return False, "L’épreuve est déposée, mais l’e-mail n’a pas pu être envoyé. Vérifie la configuration SMTP."
+        return True, "L’épreuve est déposée et un lien de validation a été envoyé par e-mail."
+
+    def get_supabase_client() -> Any | None:
+        supabase_url = os.getenv("SUPABASE_URL")
+        supabase_key = os.getenv("SUPABASE_KEY")
+        if not supabase_url or not supabase_key:
+            return None
+        try:
+            return create_client(supabase_url, supabase_key)
+        except Exception:
+            return None
+
+    def get_supabase_bucket() -> str:
+        return os.getenv("SUPABASE_BUCKET", "documents")
+
+    def remove_document_from_storage(file_name: str) -> None:
+        supabase_client = get_supabase_client()
+        if supabase_client is not None:
+            try:
+                supabase_client.storage.from_(get_supabase_bucket()).remove([file_name])
+            except Exception:
+                pass
+            return
+        local_file = file_storage / file_name
+        local_file.unlink(missing_ok=True)
+
+    def store_document_pdf(file_name: str, file_bytes: bytes) -> None:
+        supabase_client = get_supabase_client()
+        if supabase_client is not None:
+            try:
+                supabase_client.storage.from_(get_supabase_bucket()).upload(
+                    file_name,
+                    file_bytes,
+                    {"content-type": "application/pdf", "upsert": False},
+                )
+            except Exception as error:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Le stockage Supabase est indisponible pour l'upload du document.",
+                ) from error
+        else:
+            destination = file_storage / file_name
+            try:
+                with destination.open("xb") as output:
+                    output.write(file_bytes)
+            except Exception:
+                destination.unlink(missing_ok=True)
+                raise
+
+    def validate_pdf_upload(file: UploadFile, file_bytes: bytes) -> None:
+        if not file.filename or Path(file.filename).suffix.lower() != ".pdf":
+            raise HTTPException(status_code=415, detail="Seuls les fichiers PDF sont acceptés.")
+        if file.content_type not in ("application/pdf", "application/octet-stream"):
+            raise HTTPException(status_code=415, detail="Le fichier doit être un PDF.")
+        if len(file_bytes) > MAX_PDF_SIZE:
+            raise HTTPException(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                detail="Le PDF dépasse la limite de 30 Mo.",
+            )
+        if not file_bytes[:5].startswith(b"%PDF-"):
+            raise HTTPException(status_code=415, detail="Le fichier envoyé n'est pas un PDF valide.")
 
     def issue_token(user: sqlite3.Row) -> str:
         now = datetime.now(timezone.utc)
@@ -385,6 +558,65 @@ def create_app(
             ).fetchall()
         return [dict(row) for row in rows]
 
+    @application.get("/documents/{file_path:path}")
+    def download_static_document(file_path: str) -> Response:
+        requested_path = (public_documents / file_path).resolve()
+        try:
+            requested_path.relative_to(public_documents)
+        except ValueError:
+            requested_path = public_documents / "__invalid_path__"
+
+        if requested_path.suffix.lower() != ".pdf" or not requested_path.is_file():
+            return HTMLResponse(
+                """
+                <!doctype html>
+                <html lang="fr">
+                <meta charset="utf-8">
+                <title>PDF indisponible — DocCampus</title>
+                <body>
+                  <h1>Ce PDF n'est pas disponible</h1>
+                  <p>Ajoute le fichier depuis l'administration DocCampus, ou place-le
+                  dans le dossier <code>documents</code> au chemin indiqué sur la page.</p>
+                  <p><a href="/">Retour à DocCampus</a></p>
+                </body>
+                </html>
+                """,
+                status_code=status.HTTP_404_NOT_FOUND,
+            )
+
+        safe_title = re.sub(
+            r"[^A-Za-z0-9._-]+",
+            "-",
+            requested_path.stem,
+        ).strip("-") or "document"
+        return FileResponse(
+            requested_path,
+            media_type="application/pdf",
+            filename=f"{safe_title}.pdf",
+        )
+
+    @application.get("/preview/{file_path:path}")
+    def preview_static_document(file_path: str) -> Response:
+        requested_path = (public_documents / file_path).resolve()
+        try:
+            requested_path.relative_to(public_documents)
+        except ValueError:
+            requested_path = public_documents / "__invalid_path__"
+
+        if requested_path.suffix.lower() != ".pdf" or not requested_path.is_file():
+            raise HTTPException(status_code=404, detail="Le PDF à prévisualiser est introuvable.")
+
+        safe_title = re.sub(
+            r"[^A-Za-z0-9._-]+",
+            "-",
+            requested_path.stem,
+        ).strip("-") or "document"
+        return FileResponse(
+            requested_path,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f'inline; filename="{safe_title}.pdf"'},
+        )
+
     @application.post("/api/admin/categories", status_code=status.HTTP_201_CREATED)
     def add_category(
         payload: CategoryInput,
@@ -444,7 +676,7 @@ def create_app(
             rows = connection.execute(
                 """
                 SELECT id, title, type, institution, subject, year, downloads
-                FROM documents ORDER BY created_at DESC
+                FROM documents WHERE status = 'published' ORDER BY created_at DESC
                 """
             ).fetchall()
         return [dict(row) for row in rows]
@@ -455,9 +687,84 @@ def create_app(
     ) -> list[dict[str, Any]]:
         with connect() as connection:
             rows = connection.execute(
-                "SELECT * FROM documents ORDER BY created_at DESC"
+                """
+                SELECT documents.*, users.email AS submitter_email
+                FROM documents
+                LEFT JOIN users ON users.id = documents.submitted_by
+                ORDER BY
+                    CASE documents.status WHEN 'pending' THEN 0 ELSE 1 END,
+                    documents.created_at DESC
+                """
             ).fetchall()
         return [dict(row) for row in rows]
+
+    @application.post("/api/documents/submissions", status_code=status.HTTP_201_CREATED)
+    async def submit_concours_document(
+        user: Annotated[sqlite3.Row, Depends(get_user)],
+        title: Annotated[str, Form(min_length=1, max_length=120)],
+        institution: Annotated[str, Form(min_length=1, max_length=40)],
+        subject: Annotated[str, Form(min_length=1, max_length=80)],
+        year: Annotated[str, Form(max_length=4)],
+        rights_confirmed: Annotated[bool, Form()],
+        file: Annotated[UploadFile, File()],
+    ) -> dict[str, Any]:
+        if not rights_confirmed:
+            raise HTTPException(
+                status_code=422,
+                detail="Confirme que tu as le droit de partager ce document.",
+            )
+        file_bytes = await file.read()
+        try:
+            validate_pdf_upload(file, file_bytes)
+            document_id = str(uuid.uuid4())
+            file_name = f"{document_id}.pdf"
+            store_document_pdf(file_name, file_bytes)
+            created_at = datetime.now(timezone.utc).isoformat()
+            try:
+                with connect() as connection:
+                    connection.execute(
+                        """
+                        INSERT INTO documents
+                            (id, title, type, institution, subject, year, file_name,
+                             created_at, status, submitted_by)
+                        VALUES (?, ?, 'Concours', ?, ?, ?, ?, ?, 'pending', ?)
+                        """,
+                        (
+                            document_id,
+                            title.strip(),
+                            institution.strip().upper(),
+                            subject.strip(),
+                            year.strip(),
+                            file_name,
+                            created_at,
+                            user["id"],
+                        ),
+                    )
+            except Exception:
+                remove_document_from_storage(file_name)
+                raise
+        finally:
+            await file.close()
+
+        email_sent, email_message = email_submission_link(
+            document_id,
+            title.strip(),
+            institution.strip().upper(),
+            subject.strip(),
+            year.strip(),
+        )
+        return {
+            "id": document_id,
+            "title": title.strip(),
+            "type": "Concours",
+            "institution": institution.strip().upper(),
+            "subject": subject.strip(),
+            "year": year.strip(),
+            "downloads": 0,
+            "status": "pending",
+            "email_sent": email_sent,
+            "email_message": email_message,
+        }
 
     @application.post("/api/admin/documents", status_code=status.HTTP_201_CREATED)
     async def add_document(
@@ -476,36 +783,25 @@ def create_app(
             ).fetchone()
         if category is None:
             raise HTTPException(status_code=422, detail="Catégorie de document inconnue.")
-        if not file.filename or Path(file.filename).suffix.lower() != ".pdf":
-            raise HTTPException(status_code=415, detail="Seuls les fichiers PDF sont acceptés.")
-        if file.content_type not in ("application/pdf", "application/octet-stream"):
-            raise HTTPException(status_code=415, detail="Le fichier doit être un PDF.")
+        file_bytes = await file.read()
+        try:
+            validate_pdf_upload(file, file_bytes)
+        except Exception:
+            await file.close()
+            raise
 
         document_id = str(uuid.uuid4())
         file_name = f"{document_id}.pdf"
-        destination = file_storage / file_name
-        total_size = 0
-        header = b""
+        store_document_pdf(file_name, file_bytes)
+
         try:
-            with destination.open("xb") as output:
-                while chunk := await file.read(1024 * 1024):
-                    if not header:
-                        header = chunk[:5]
-                    total_size += len(chunk)
-                    if total_size > MAX_PDF_SIZE:
-                        raise HTTPException(
-                            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                            detail="Le PDF dépasse la limite de 30 Mo.",
-                        )
-                    output.write(chunk)
-            if not header.startswith(b"%PDF-"):
-                raise HTTPException(status_code=415, detail="Le fichier envoyé n'est pas un PDF valide.")
             with connect() as connection:
                 connection.execute(
                     """
                     INSERT INTO documents
-                        (id, title, type, institution, subject, year, file_name, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        (id, title, type, institution, subject, year, file_name,
+                         created_at, status)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'published')
                     """,
                     (
                         document_id,
@@ -519,7 +815,7 @@ def create_app(
                     ),
                 )
         except Exception:
-            destination.unlink(missing_ok=True)
+            remove_document_from_storage(file_name)
             raise
         finally:
             await file.close()
@@ -532,30 +828,172 @@ def create_app(
             "subject": subject.strip(),
             "year": year.strip(),
             "downloads": 0,
+            "status": "published",
         }
 
     @application.get("/api/documents/{document_id}/file")
-    def download_document(document_id: str) -> FileResponse:
+    def download_document(document_id: str) -> Response:
         with connect() as connection:
             row = connection.execute(
-                "SELECT file_name, title FROM documents WHERE id = ?",
+                "SELECT file_name, title FROM documents WHERE id = ? AND status = 'published'",
                 (document_id,),
             ).fetchone()
             if row is None:
                 raise HTTPException(status_code=404, detail="Document introuvable.")
-            file_path = file_storage / row["file_name"]
-            if not file_path.is_file() or file_path.parent.resolve() != file_storage.resolve():
-                raise HTTPException(status_code=404, detail="Le fichier PDF n'est plus disponible.")
+            file_name = row["file_name"]
             connection.execute(
                 "UPDATE documents SET downloads = downloads + 1 WHERE id = ?",
                 (document_id,),
             )
+
         safe_title = re.sub(r"[^A-Za-z0-9._-]+", "-", row["title"]).strip("-") or "document"
+        supabase_client = get_supabase_client()
+        if supabase_client is not None:
+            try:
+                file_bytes = supabase_client.storage.from_(get_supabase_bucket()).download(file_name)
+            except Exception as error:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Le fichier PDF n'est plus disponible sur Supabase Storage.",
+                ) from error
+            return Response(
+                content=file_bytes,
+                media_type="application/pdf",
+                headers={"Content-Disposition": f'attachment; filename="{safe_title}.pdf"'},
+            )
+
+        file_path = file_storage / file_name
+        if not file_path.is_file() or file_path.parent.resolve() != file_storage.resolve():
+            raise HTTPException(status_code=404, detail="Le fichier PDF n'est plus disponible.")
         return FileResponse(
             file_path,
             media_type="application/pdf",
             filename=f"{safe_title}.pdf",
         )
+
+    @application.get("/api/documents/{document_id}/preview")
+    def preview_document(document_id: str) -> Response:
+        with connect() as connection:
+            row = connection.execute(
+                "SELECT file_name, title FROM documents WHERE id = ? AND status = 'published'",
+                (document_id,),
+            ).fetchone()
+        if row is None:
+            raise HTTPException(status_code=404, detail="Document introuvable.")
+
+        file_name = row["file_name"]
+        safe_title = re.sub(r"[^A-Za-z0-9._-]+", "-", row["title"]).strip("-") or "document"
+        supabase_client = get_supabase_client()
+        if supabase_client is not None:
+            try:
+                file_bytes = supabase_client.storage.from_(get_supabase_bucket()).download(file_name)
+            except Exception as error:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Le fichier PDF n'est plus disponible sur Supabase Storage.",
+                ) from error
+            return Response(
+                content=file_bytes,
+                media_type="application/pdf",
+                headers={"Content-Disposition": f'inline; filename="{safe_title}.pdf"'},
+            )
+
+        file_path = file_storage / file_name
+        if not file_path.is_file() or file_path.parent.resolve() != file_storage.resolve():
+            raise HTTPException(status_code=404, detail="Le fichier PDF n'est plus disponible.")
+        return FileResponse(
+            file_path,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f'inline; filename="{safe_title}.pdf"'},
+        )
+
+    @application.get("/api/admin/documents/{document_id}/preview")
+    def preview_admin_document(
+        document_id: str,
+        _: Annotated[sqlite3.Row, Depends(require_admin)],
+    ) -> Response:
+        with connect() as connection:
+            row = connection.execute(
+                "SELECT file_name, title FROM documents WHERE id = ?",
+                (document_id,),
+            ).fetchone()
+        if row is None:
+            raise HTTPException(status_code=404, detail="Document introuvable.")
+
+        file_name = row["file_name"]
+        safe_title = re.sub(r"[^A-Za-z0-9._-]+", "-", row["title"]).strip("-") or "document"
+        supabase_client = get_supabase_client()
+        if supabase_client is not None:
+            try:
+                file_bytes = supabase_client.storage.from_(get_supabase_bucket()).download(file_name)
+            except Exception as error:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Le fichier PDF n'est plus disponible sur Supabase Storage.",
+                ) from error
+            return Response(
+                content=file_bytes,
+                media_type="application/pdf",
+                headers={"Content-Disposition": f'inline; filename="{safe_title}.pdf"'},
+            )
+
+        file_path = file_storage / file_name
+        if not file_path.is_file() or file_path.parent.resolve() != file_storage.resolve():
+            raise HTTPException(status_code=404, detail="Le fichier PDF n'est plus disponible.")
+        return FileResponse(
+            file_path,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f'inline; filename="{safe_title}.pdf"'},
+        )
+
+    @application.post(
+        "/api/admin/documents/{document_id}/approve",
+        status_code=status.HTTP_200_OK,
+    )
+    def approve_document(
+        document_id: str,
+        _: Annotated[sqlite3.Row, Depends(require_admin)],
+    ) -> dict[str, str]:
+        with connect() as connection:
+            row = connection.execute(
+                "SELECT status, type FROM documents WHERE id = ?",
+                (document_id,),
+            ).fetchone()
+            if row is None:
+                raise HTTPException(status_code=404, detail="Document introuvable.")
+            if row["status"] != "pending" or row["type"] != "Concours":
+                raise HTTPException(
+                    status_code=409,
+                    detail="Seules les épreuves de concours en attente peuvent être validées.",
+                )
+            connection.execute(
+                "UPDATE documents SET status = 'published' WHERE id = ?",
+                (document_id,),
+            )
+        return {"id": document_id, "status": "published"}
+
+    @application.delete(
+        "/api/admin/documents/{document_id}/submission",
+        status_code=status.HTTP_204_NO_CONTENT,
+    )
+    def reject_document_submission(
+        document_id: str,
+        _: Annotated[sqlite3.Row, Depends(require_admin)],
+    ) -> None:
+        with connect() as connection:
+            row = connection.execute(
+                "SELECT status, type, file_name FROM documents WHERE id = ?",
+                (document_id,),
+            ).fetchone()
+            if row is None:
+                raise HTTPException(status_code=404, detail="Document introuvable.")
+            if row["status"] != "pending" or row["type"] != "Concours":
+                raise HTTPException(
+                    status_code=409,
+                    detail="Seules les épreuves de concours en attente peuvent être refusées.",
+                )
+            connection.execute("DELETE FROM documents WHERE id = ?", (document_id,))
+        remove_document_from_storage(row["file_name"])
 
     @application.delete("/api/admin/documents/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
     def delete_document(
@@ -570,7 +1008,7 @@ def create_app(
             if row is None:
                 raise HTTPException(status_code=404, detail="Document introuvable.")
             connection.execute("DELETE FROM documents WHERE id = ?", (document_id,))
-        (file_storage / row["file_name"]).unlink(missing_ok=True)
+        remove_document_from_storage(row["file_name"])
 
     @application.get("/api/admin/users")
     def list_users(
